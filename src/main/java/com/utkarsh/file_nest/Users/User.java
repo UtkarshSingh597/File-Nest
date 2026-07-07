@@ -1,4 +1,4 @@
-package Users;
+package com.utkarsh.file_nest.Users;
 
 import java.time.LocalDate;
 
@@ -36,12 +36,12 @@ private String password;
 private LocalDate createdAt = LocalDate.now();
 
 
-public User(long id, String name, String email, String password, LocalDate createdAt) {
-    this.id = id;
+public User( String name, String email, String password) {
+   
     this.name = name;
     this.email = email;
     this.password = password;
-    this.createdAt = createdAt;
+   
 }
 
 

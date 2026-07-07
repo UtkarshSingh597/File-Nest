@@ -1,14 +1,19 @@
-package File;
+package com.utkarsh.file_nest.File;
 
 import java.time.LocalDate;
 
+import com.utkarsh.file_nest.Users.User;
+import com.utkarsh.file_nest.folder.Folders;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 
@@ -44,24 +49,24 @@ private Long size;
 @Column(nullable = false)
 private String mimeType;
 
-@OneToMany
-@Column(nullable = false)
-private String owner;
+@ManyToOne
+@JoinColumn(name = "owner_id")
+private User owner;
 
-@OneToMany
+@ManyToOne
 @JoinColumn(name = "folder_id")
-private Folder folder;
+private Folders folder;
 
-@Column(nullable = false)
-private String status;
+@Enumerated(EnumType.STRING)
+private FileStatus status; 
 
 @Column(nullable = false)
 private LocalDate createdAt = LocalDate.now();
 
-    public File(LocalDate createdAt, Folder folder, Long id, String mimeType, String originalName, String owner, Long size, String status, String storedName) {
-        this.createdAt = createdAt;
+    public File( Folders folder,  String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
+       
         this.folder = folder;
-        this.id = id;
+       
         this.mimeType = mimeType;
         this.originalName = originalName;
         this.owner = owner;
@@ -99,22 +104,22 @@ public String getMimeType() {
 public void setMimeType(String mimeType) {
     this.mimeType = mimeType;
 }
-public String getOwner() {
+public User getOwner() {
     return owner;
 }
-public void setOwner(String owner) {
+public void setOwner(User owner) {
     this.owner = owner;
 }
-public String getFolder() {
+public Folders getFolder() {
     return folder;
 }
-public void setFolder(String folder) {
+public void setFolder(Folders folder) {
     this.folder = folder;
 }
-public String getStatus() {
+public FileStatus getStatus() {
     return status;
 }
-public void setStatus(String status) {
+public void setStatus(FileStatus status) {
     this.status = status;
 }
 public java.time.LocalDate getCreatedAt() {
