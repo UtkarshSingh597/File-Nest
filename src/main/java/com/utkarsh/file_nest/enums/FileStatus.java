@@ -1,4 +1,4 @@
-package com.utkarsh.file_nest.File;
+package com.utkarsh.file_nest.enums;
 
 
     public enum FileStatus{

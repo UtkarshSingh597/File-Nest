@@ -1,4 +1,4 @@
-package com.utkarsh.file_nest.Users;
+package com.utkarsh.file_nest.entity;
 
 import java.time.LocalDate;
 
