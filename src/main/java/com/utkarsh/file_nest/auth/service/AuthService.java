@@ -39,7 +39,7 @@ public AuthResponse login(LoginRequest request){
         if(!passwordEncoder.matches(request.getPassword(),user.getPassword())){
             throw new InvalidCredentialsException("Invalid Email or Password");
         }
-    return new AuthResponse("dummy-token");
+    return new AuthResponse("login successful");
     
 }
 
