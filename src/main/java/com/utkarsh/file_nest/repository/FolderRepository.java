@@ -1,11 +1,12 @@
-package com.utkarsh.file_nest.folder;
+package com.utkarsh.file_nest.repository;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.utkarsh.file_nest.Users.User;
+import com.utkarsh.file_nest.entity.Folders;
+import com.utkarsh.file_nest.entity.User;
 
 public interface FolderRepository extends JpaRepository<Folders,Long> {
 

@@ -1,10 +1,7 @@
-package com.utkarsh.file_nest.folder;
+package com.utkarsh.file_nest.entity;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import com.utkarsh.file_nest.File.File;
-import com.utkarsh.file_nest.Users.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
