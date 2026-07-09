@@ -132,6 +132,14 @@ Completed
 - GlobalExceptionHandler
 
 - Registration tested in Postman
+ 
+- Login endpoint
+
+- InvalidCredentialsException
+
+- Login password verification using BCrypt
+
+- Global exception handling for invalid credentials
 
 ---
 
@@ -139,7 +147,9 @@ Completed
 
 Authentication
 
-Working on Login endpoint.
+Login endpoint completed.
+
+Currently working on JWT Service.
 
 JWT has NOT been implemented yet.
 
@@ -185,17 +195,22 @@ Find user by email
 
 ↓
 
-Compare password
+If user does not exist, throw InvalidCredentialsException
 
 ↓
 
-Generate JWT
+Compare raw password with hashed password using BCrypt PasswordEncoder.matches()
 
 ↓
 
-Return AuthResponse
+If password is invalid, throw InvalidCredentialsException
 
----
+↓
+
+Return temporary AuthResponse
+
+
+Note: Login currently returns a temporary success response. This will be replaced with a real JWT after JwtService is implemented.
 
 # Future Features
 

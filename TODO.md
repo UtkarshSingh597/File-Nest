@@ -1,7 +1,7 @@
 # Authentication
 
 - [x] Register
-- [ ] Login
+- [x] Login
 - [ ] JWT Service
 - [ ] JWT Filter
 
