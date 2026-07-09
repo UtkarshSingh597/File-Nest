@@ -1,23 +1,33 @@
 package com.utkarsh.file_nest.auth.service;
 
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.utkarsh.file_nest.Exceptions.EmailAlreadyExistsException;
 import com.utkarsh.file_nest.auth.dto.AuthResponse;
 import com.utkarsh.file_nest.auth.dto.LoginRequest;
 import com.utkarsh.file_nest.auth.dto.RegisterRequest;
+import com.utkarsh.file_nest.entity.User;
 import com.utkarsh.file_nest.repository.UserRepository;
+
+
 
 @Service
 public class AuthService {
 
 
 private final UserRepository userRepository;
+private final PasswordEncoder passwordEncoder;
 
 
-public AuthService(UserRepository userRepository) {
+public AuthService(UserRepository userRepository,
+                    PasswordEncoder passwordEncoder
+) {
     this.userRepository = userRepository;
+    this.passwordEncoder= passwordEncoder;
 }
-
 
 
 public AuthResponse login(LoginRequest request){
@@ -26,7 +36,27 @@ public AuthResponse login(LoginRequest request){
 }
 
 public AuthResponse register(RegisterRequest request){
-    return new AuthResponse();
+    Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+
+    if(existingUser.isPresent()){
+        
+            throw new EmailAlreadyExistsException ("This Email Already Exists");
+    
+    }
+
+    String hashedPassword = passwordEncoder.encode(request.getPassword());
+
+    User user = new User(
+        request.getName(),
+        request.getEmail(),
+        hashedPassword
+
+    );
+
+   User savedUser = userRepository.save(user);
+
+
+    return new AuthResponse("dummy-Token");
 }
 
 }
