@@ -13,6 +13,7 @@ import com.utkarsh.file_nest.auth.dto.LoginRequest;
 import com.utkarsh.file_nest.auth.dto.RegisterRequest;
 import com.utkarsh.file_nest.entity.User;
 import com.utkarsh.file_nest.repository.UserRepository;
+import com.utkarsh.file_nest.security.JwtService;
 
 
 
@@ -22,34 +23,34 @@ public class AuthService {
 
 private final UserRepository userRepository;
 private final PasswordEncoder passwordEncoder;
+private final JwtService jwtService;
 
 
 public AuthService(UserRepository userRepository,
-                    PasswordEncoder passwordEncoder
-) {
+                    PasswordEncoder passwordEncoder,
+                    JwtService jwtService) {
     this.userRepository = userRepository;
     this.passwordEncoder= passwordEncoder;
+    this.jwtService = jwtService;
 }
-
 
 public AuthResponse login(LoginRequest request){
     User user = userRepository.findByEmail(request.getEmail())
         .orElseThrow(() -> new UsernameNotFoundException("User Does not Exists"));
 
-        if(!passwordEncoder.matches(request.getPassword(),user.getPassword())){
-            throw new InvalidCredentialsException("Invalid Email or Password");
-        }
-    return new AuthResponse("login successful");
-    
+    if(!passwordEncoder.matches(request.getPassword(),user.getPassword())){
+        throw new InvalidCredentialsException("Invalid Email or Password");
+    }
+
+    String token = jwtService.generateToken(user.getEmail());
+    return new AuthResponse(token);
 }
 
 public AuthResponse register(RegisterRequest request){
     Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
     if(existingUser.isPresent()){
-        
-            throw new EmailAlreadyExistsException ("This Email Already Exists");
-    
+        throw new EmailAlreadyExistsException ("This Email Already Exists");
     }
 
     String hashedPassword = passwordEncoder.encode(request.getPassword());
@@ -58,13 +59,13 @@ public AuthResponse register(RegisterRequest request){
         request.getName(),
         request.getEmail(),
         hashedPassword
-
     );
 
-   User savedUser = userRepository.save(user);
-
-
-    return new AuthResponse("dummy-Token");
+    User savedUser = userRepository.save(user);
+    String token = jwtService.generateToken(user.getEmail());
+    return new AuthResponse(token);
 }
+
+
 
 }

@@ -38,6 +38,7 @@ Future
 # Architecture
 
 Controller
+
 ↓
 
 Service
@@ -63,6 +64,7 @@ Repositories should only access the database.
 com.utkarsh.file_nest
 
 auth
+
     controller
     dto
     service
@@ -109,49 +111,47 @@ Never expose entity objects directly from controllers.
 
 # Current Progress
 
-Completed
-
+Competed
 - User Entity
 - Folder Entity
 - File Entity
-
 - JPA Repositories
+
 
 - Registration DTO
 - Login DTO
 - AuthResponse DTO
 
-- AuthController
 
-- AuthService (Registration)
+- AuthController
+- AuthService registration
+- AuthService login
+
 
 - PasswordEncoder
-
 - EmailAlreadyExistsException
-
+- InvalidCredentialsException
 - GlobalExceptionHandler
 
+
+- JwtService
+- JwtAuthenticationFilter
+- SecurityConfig JWT filter wiring
+
+
 - Registration tested in Postman
- 
-- Login endpoint
+- Login tested in Postman
+- JWT protected endpoint tested with Bearer token
 
-- InvalidCredentialsException
-
-- Login password verification using BCrypt
-
-- Global exception handling for invalid credentials
 
 ---
 
 # Current Feature
+Folder Management
 
-Authentication
+Authentication is complete.
 
-Login endpoint completed.
-
-Currently working on JWT Service.
-
-JWT has NOT been implemented yet.
+Currently working on Create Folder endpoint.
 
 ---
 
