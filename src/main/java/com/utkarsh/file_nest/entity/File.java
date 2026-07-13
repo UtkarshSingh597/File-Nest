@@ -54,7 +54,7 @@ private User owner;
 
 @ManyToOne
 @JoinColumn(name = "folder_id")
-private Folders folder;
+private Folder folder;
 
 @Enumerated(EnumType.STRING)
 private FileStatus status; 
@@ -62,7 +62,7 @@ private FileStatus status;
 @Column(nullable = false)
 private LocalDate createdAt = LocalDate.now();
 
-    public File( Folders folder,  String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
+    public File(Folder folder, String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
        
         this.folder = folder;
        
@@ -109,10 +109,10 @@ public User getOwner() {
 public void setOwner(User owner) {
     this.owner = owner;
 }
-public Folders getFolder() {
+public Folder getFolder() {
     return folder;
 }
-public void setFolder(Folders folder) {
+public void setFolder(Folder folder) {
     this.folder = folder;
 }
 public FileStatus getStatus() {

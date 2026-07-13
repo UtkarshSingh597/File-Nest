@@ -5,18 +5,18 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.utkarsh.file_nest.entity.Folders;
+import com.utkarsh.file_nest.entity.Folder;
 import com.utkarsh.file_nest.entity.User;
 
-public interface FolderRepository extends JpaRepository<Folders,Long> {
+public interface FolderRepository extends JpaRepository<Folder,Long> {
 
-    List<Folders> findByOwner(User owner);
+    List<Folder> findByOwner(User owner);
 
-    List<Folders> findByParentFolder(Folders parentFolder);
+    List<Folder> findByParentFolder(Folder parentFolder);
 
-    Optional<Folders>findByOwnerAndParentFolderAndName(
+    Optional<Folder>findByOwnerAndParentFolderAndName(
         User owner,
-        Folders parentFolder,
+        Folder parentFolder,
         String name
     );
 

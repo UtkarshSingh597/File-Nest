@@ -2,7 +2,7 @@ package com.utkarsh.file_nest.folder.dto;
 
 import java.time.LocalDate;
 
-public class FolderReponse {
+public class FolderResponse {
 
     private Long folderId;
     private String folderName;
@@ -18,18 +18,18 @@ public class FolderReponse {
 
     private LocalDate createdAt;
 
-    public FolderReponse(LocalDate createdAt, long folderId, String folderName, long parentFolderId) {
+    public FolderResponse(LocalDate createdAt, Long folderId, String folderName, Long parentFolderId) {
         this.createdAt = createdAt;
         this.folderId = folderId;
         this.folderName = folderName;
         this.parentFolderId = parentFolderId;
     }
 
-    public long getFolderId() {
+    public Long getFolderId() {
         return folderId;
     }
 
-    public void setFolderId(long folderId) {
+    public void setFolderId(Long folderId) {
         this.folderId = folderId;
     }
 
@@ -41,7 +41,7 @@ public class FolderReponse {
         this.folderName = folderName;
     }
 
-    public long getParentFolderId() {
+    public Long getParentFolderId() {
         return parentFolderId;
     }
 

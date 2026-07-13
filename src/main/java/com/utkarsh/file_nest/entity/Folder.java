@@ -22,9 +22,9 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "folders")
-public class Folders {
+public class Folder {
     
-    public Folders(){
+    public Folder(){
 
     }
 
@@ -37,7 +37,7 @@ public class Folders {
 
     @ManyToOne
     @JoinColumn(name = "parent_folder_id")
-    private Folders parentFolder;
+    private Folder parentFolder;
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
@@ -51,15 +51,15 @@ public class Folders {
 
 
     @OneToMany(mappedBy = "parentFolder")
-private List<Folders> subFolders;
+private List<Folder> subFolders;
 
-    public List<Folders> getSubFolders() {
+    public List<Folder> getSubFolders() {
         return subFolders;
     }
-    public void setSubFolders(List<Folders> subFolders) {
+    public void setSubFolders(List<Folder> subFolders) {
         this.subFolders = subFolders;
     }
-    public Folders(String name, User owner, Folders parentFolder, List<File> files, List<Folders> subFolders) {
+    public Folder(String name, User owner, Folder parentFolder, List<File> files, List<Folder> subFolders) {
         this.name = name;
         this.owner = owner;
         this.parentFolder = parentFolder;
@@ -84,10 +84,10 @@ private List<Folders> subFolders;
     public void setName(String name) {
         this.name = name;
     }
-    public Folders getParentFolder() {
+    public Folder getParentFolder() {
         return parentFolder;
     }
-    public void setParentFolder(Folders parentFolder) {
+    public void setParentFolder(Folder parentFolder) {
         this.parentFolder = parentFolder;
     }
     public User getOwner() {

@@ -1,17 +1,6 @@
 package com.utkarsh.file_nest.security;
 
-<<<<<<< HEAD
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
-import javax.crypto.SecretKey;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-=======
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
->>>>>>> 7ccd56be3bb04968686e05ac5eea8d66f1accb8f
+
 
 @Service
 public class JwtService {
@@ -31,44 +20,44 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
+
+
     public String generateToken(String email) {
         return Jwts.builder()
-                   .subject(email)
-                   .issuedAt(new Date())
-                   .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                   .signWith(signingKey())
-                   .compact();
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(signingKey())
+                .compact();
     }
 
     private SecretKey signingKey() {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-<<<<<<< HEAD
 
-    public String extractEmail(String token){
-        return Jwts.parser()
-                   .verifyWith(signingKey())
-                   .build()
-                   .parseSignedClaims(token)
-                   .getPayload()
-                   .getSubject();
+        public String extractEmail (String token){
+            return Jwts.parser()
+                    .verifyWith(signingKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
+        }
+
+        public boolean isTokenValid (String token, String email){
+            String tokenEmail = extractEmail(token);
+            return tokenEmail.equals(email) && !isTokenExpired(token);
+        }
+
+        private boolean isTokenExpired (String token){
+            Date expiration = Jwts.parser()
+                    .verifyWith(signingKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration();
+            return expiration.before(new Date());
+        }
+
     }
-
-public boolean isTokenValid(String token, String email){
-    String tokenEmail = extractEmail(token);
-    return tokenEmail.equals(email) && !isTokenExpired(token);
-}
-
-private boolean isTokenExpired(String token) {
-    Date expiration = Jwts.parser()
-                          .verifyWith(signingKey())
-                          .build()
-                          .parseSignedClaims(token)
-                          .getPayload()
-                          .getExpiration();
-    return expiration.before(new Date());
-}
-=======
->>>>>>> 7ccd56be3bb04968686e05ac5eea8d66f1accb8f
-}

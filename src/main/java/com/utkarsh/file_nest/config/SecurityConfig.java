@@ -23,7 +23,7 @@ public class SecurityConfig {
     
 
     @Bean
-    public PasswordEncoder psssEncoder(){
+    public PasswordEncoder passEncoder(){
         return new BCryptPasswordEncoder();
     }
 
