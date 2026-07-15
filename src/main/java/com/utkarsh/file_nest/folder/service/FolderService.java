@@ -13,9 +13,9 @@ import com.utkarsh.file_nest.folder.dto.CreateFolderRequest;
 import com.utkarsh.file_nest.folder.dto.FolderResponse;
 import com.utkarsh.file_nest.folder.dto.RenameFolderRequest;
 import com.utkarsh.file_nest.repository.FolderRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import com.utkarsh.file_nest.repository.FileRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -141,8 +141,8 @@ folder.setName(request.getFolderName());
 
     }
 @Transactional
-    public void deleteFolder(Long folderId) {
-        Folder folder = findOwnedFolder(folderId);
-        deleteFolderRecursively(folder);
-    }
+public void deleteFolder(Long folderId) {
+    Folder folder = findOwnedFolder(folderId);
+    deleteFolderRecursively(folder);
+}
 }

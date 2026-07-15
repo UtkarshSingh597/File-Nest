@@ -13,9 +13,9 @@
 
 # Folder
 
-- [ ] Create Folder
-- [ ] Rename Folder
-- [ ] Delete Folder
+- [x] Create Folder
+- [x] Rename Folder
+- [x] Delete Folder
 
 # Sharing
 

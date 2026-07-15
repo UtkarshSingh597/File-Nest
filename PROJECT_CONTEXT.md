@@ -1,12 +1,12 @@
-#  FileNest - Project Context
+# FileNest - Project Context
 
-A production-style cloud file storage platform inspired by **Google Drive** and **Dropbox**.
+A production-style cloud file storage platform inspired by Google Drive and Dropbox.
 
-The primary goal of this project is to learn **backend engineering** by implementing production-quality architecture, security, scalability, and clean code practices.
+The primary goal of this project is to learn backend engineering by implementing production-quality architecture, security, scalability, and clean code practices.
 
 ---
 
-#  Project Goal
+# Project Goal
 
 Build a scalable cloud storage backend while learning:
 
@@ -20,7 +20,7 @@ Build a scalable cloud storage backend while learning:
 
 ---
 
-#  Tech Stack
+# Tech Stack
 
 ## Backend
 
@@ -37,14 +37,15 @@ Build a scalable cloud storage backend while learning:
 
 ## Authentication
 
-- JWT (JSON Web Tokens)
+- JWT
 - BCrypt Password Encoding
 
 ## Planned Technologies
 
 - Redis
 - RabbitMQ
-- MinIO / AWS S3
+- MinIO
+- AWS S3
 - Docker
 - Docker Compose
 - JUnit
@@ -53,7 +54,7 @@ Build a scalable cloud storage backend while learning:
 
 ---
 
-# 🏛️ Architecture
+# Architecture
 
 ```
 Client
@@ -71,7 +72,7 @@ Repository
 MySQL
 ```
 
-### Responsibilities
+## Responsibilities
 
 ### Controller
 
@@ -84,7 +85,7 @@ MySQL
 
 - Business logic
 - Validation
-- Security checks
+- Authorization
 - Transaction management
 
 ### Repository
@@ -94,7 +95,7 @@ MySQL
 
 ---
 
-# 📂 Package Structure
+# Package Structure
 
 ```
 com.utkarsh.file_nest
@@ -123,128 +124,165 @@ com.utkarsh.file_nest
 
 ---
 
-#  Coding Standards
+# Coding Standards
 
-- ✅ Constructor Injection
-- ❌ No Field Injection (`@Autowired`)
-- ✅ DTOs for Requests & Responses
-- ✅ ResponseEntity from Controllers
-- ✅ Custom Exceptions
-- ✅ Global Exception Handling (`@RestControllerAdvice`)
-- ✅ Use Optional instead of null
-- ✅ BCrypt Password Hashing
-- ✅ Never expose Entities directly
-- ✅ Thin Controllers
-- ✅ Business Logic inside Services
-- ✅ Clean, Modular Code
+- Constructor Injection
+- No Field Injection (`@Autowired`)
+- DTOs for Requests & Responses
+- ResponseEntity from Controllers
+- Custom Exceptions
+- Global Exception Handling (`@RestControllerAdvice`)
+- Optional instead of null
+- BCrypt Password Hashing
+- Never expose entities directly
+- Thin Controllers
+- Business Logic inside Services
+- Constructor-based dependency injection
+- Soft Delete instead of Hard Delete where applicable
+- Reusable helper methods to avoid duplicated business logic
 
 ---
 
-#  Current Progress
+# Current Progress
 
 ## Database
 
 - [x] User Entity
 - [x] Folder Entity
 - [x] File Entity
+- [x] FolderStatus Enum
+- [x] FileStatus Enum
 - [x] JPA Repositories
+
+---
 
 ## Authentication
 
-- [x] Register DTO
-- [x] Login DTO
-- [x] AuthResponse DTO
-- [x] AuthController
-- [x] Registration Service
-- [x] Login Service
-- [x] Password Encoding (BCrypt)
+- [x] Register
+- [x] Login
 - [x] JWT Service
 - [x] JWT Authentication Filter
 - [x] Spring Security Configuration
-- [x] Protected Endpoints
+- [x] BCrypt Password Encoding
+- [x] Protected APIs
 - [x] Bearer Token Authentication
+- [x] LoggedUser Service
+
+---
+
+## Folder Management
+
+### Implemented
+
+- [x] Create Folder
+- [x] Get Folder
+- [x] Get All Folders
+- [x] Rename Folder
+- [x] Recursive Soft Delete
+- [x] Nested Folder Support
+- [x] Folder Ownership Validation
+- [x] Duplicate Folder Name Validation
+- [x] Folder DTO Mapping
+- [x] Folder Status Filtering
+
+### Folder Design
+
+Folders support recursive hierarchy.
+
+Folder deletion is implemented using **recursive soft delete**.
+
+```
+Parent Folder
+      │
+      ├── Child Folder
+      │       └── Child Folder
+      │
+      └── Files
+```
+
+Deleting a folder recursively marks:
+
+- Parent Folder
+- Child Folders
+- Files
+
+as `DELETED`.
+
+---
 
 ## Exception Handling
 
 - [x] EmailAlreadyExistsException
 - [x] InvalidCredentialsException
+- [x] FolderNotFoundException
+- [x] FolderAlreadyExistsException
+- [x] FolderAccessDeniedException
 - [x] GlobalExceptionHandler
+
+---
 
 ## Testing
 
-- [x] Registration tested using Postman
-- [x] Login tested using Postman
-- [x] JWT Authentication tested
+Authentication tested using Postman
+
+- [x] Register
+- [x] Login
+- [x] JWT Authentication
+
+Folder APIs tested
+
+- [x] Create Folder
+- [x] Get Folder
+- [x] Get All Folders
+- [x] Rename Folder
+- [ ] Recursive Delete
 
 ---
 
-#  Current Feature
+# Folder Service Design
 
-## Folder Management
+```
+Controller
 
-Authentication is complete.
+↓
 
-Currently implementing:
+FolderService
 
-- Create Folder API
+↓
+
+getOwnedFolder()
+
+↓
+
+Business Logic
+
+↓
+
+Repository
+```
+
+Reusable helper methods
+
+- mapToFolderResponse()
+- getOwnedFolder()
+
+Authentication is handled through:
+
+- LoggedUser Service
 
 ---
 
-#  Authentication Flow
+# Current Feature
 
-## Registration
+## File Management
 
-```
-RegisterRequest
-        │
-        ▼
-Validate DTO
-        │
-        ▼
-Check Duplicate Email
-        │
-        ▼
-Hash Password (BCrypt)
-        │
-        ▼
-Create User
-        │
-        ▼
-Save User
-        │
-        ▼
-Generate JWT
-        │
-        ▼
-Return AuthResponse
-```
+Next module:
+
+- Upload File
 
 ---
 
-## Login
-
-```
-LoginRequest
-        │
-        ▼
-Validate DTO
-        │
-        ▼
-Find User by Email
-        │
-        ▼
-Verify Password
-        │
-        ▼
-Generate JWT
-        │
-        ▼
-Return AuthResponse
-```
-
----
-
-#  Roadmap
+# Roadmap
 
 ## Authentication
 
@@ -253,20 +291,31 @@ Return AuthResponse
 - [x] JWT Authentication
 - [ ] Role-Based Authorization
 
+---
+
 ## Folder Management
 
-- [ ] Create Folder
-- [ ] Rename Folder
-- [ ] Delete Folder
-- [ ] Nested Folders
+- [x] Create Folder
+- [x] Get Folder
+- [x] Get All Folders
+- [x] Rename Folder
+- [x] Recursive Soft Delete
+- [ ] Restore Folder
+- [ ] Move Folder
+
+---
 
 ## File Management
 
 - [ ] Upload File
 - [ ] Download File
+- [ ] Get File Metadata
+- [ ] List Files
+- [ ] Rename File
 - [ ] Delete File
 - [ ] Restore File
-- [ ] File Metadata
+
+---
 
 ## Sharing
 
@@ -274,67 +323,88 @@ Return AuthResponse
 - [ ] Shared Folders
 - [ ] Access Permissions
 
+---
+
 ## Cloud Storage
 
-- [ ] MinIO Integration
-- [ ] AWS S3 Support
+- [ ] MinIO
+- [ ] AWS S3
+
+---
 
 ## Performance
 
-- [ ] Redis Cache
+- [ ] Redis
 - [ ] RabbitMQ
 - [ ] Async Processing
+
+---
 
 ## Deployment
 
 - [ ] Docker
 - [ ] Docker Compose
-- [ ] GitHub Actions CI/CD
+- [ ] GitHub Actions
+
+---
 
 ## Testing
 
-- [ ] Unit Tests (JUnit)
+- [ ] JUnit
 - [ ] Mockito
 - [ ] Integration Tests
 
 ---
 
-#  Learning Objectives
-
-This project is designed to provide hands-on experience with:
+# Learning Objectives
 
 - Spring Boot
 - Spring Security
-- JWT Authentication
-- REST API Design
+- JWT
+- REST APIs
 - Database Design
-- Flyway Migrations
-- File Storage Systems
+- Flyway
+- File Storage
+- Object Storage
 - Distributed Systems
-- Caching
-- Message Queues
-- Cloud Storage
+- Redis
+- RabbitMQ
 - Docker
-- CI/CD Pipelines
+- CI/CD
+- Testing
 
 ---
 
-#  Development Principles
+# Development Principles
 
-- Keep Controllers Thin
-- Business Logic Lives in Services
-- Repository Layer Only Accesses the Database
-- Prefer Composition over Complexity
-- Follow SOLID Principles
-- Write Readable Code
-- Avoid Premature Optimization
-- Prioritize Maintainability
-- Build Production-Ready Features
+- Thin Controllers
+- Business Logic inside Services
+- Repository only accesses the database
+- DTOs for API communication
+- SOLID Principles
+- Clean Architecture
+- Soft Delete instead of Hard Delete
+- Recursive algorithms for hierarchical data
+- Readable and maintainable code
+- Production-ready design
 
 ---
 
-#  Current Status
+# Current Status
 
-**Current Milestone:** Folder Management
+## Completed Milestone
 
-**Next Task:** Implement the Create Folder endpoint.
+Authentication ✅
+
+Folder Management ✅
+
+## Current Milestone
+
+File Management
+
+### Next Feature
+
+- File Upload API
+- MultipartFile
+- Metadata Storage
+- Local Storage (before MinIO)
