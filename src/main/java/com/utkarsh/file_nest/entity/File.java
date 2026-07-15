@@ -1,19 +1,9 @@
 package com.utkarsh.file_nest.entity;
 
-import java.time.LocalDate;
-
 import com.utkarsh.file_nest.enums.FileStatus;
+import jakarta.persistence.*;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 
 // id
@@ -61,6 +51,7 @@ private FileStatus status;
 
 @Column(nullable = false)
 private LocalDate createdAt = LocalDate.now();
+
 
     public File(Folder folder, String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
        

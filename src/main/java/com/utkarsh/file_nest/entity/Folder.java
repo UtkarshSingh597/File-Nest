@@ -1,17 +1,10 @@
 package com.utkarsh.file_nest.entity;
 
+import com.utkarsh.file_nest.enums.FolderStatus;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.util.List;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 // id
 // name
@@ -45,6 +38,16 @@ public class Folder {
 
     private LocalDate createdAt = LocalDate.now();
 
+    public FolderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(FolderStatus status) {
+        this.status = status;
+    }
+
+    @Enumerated(EnumType.STRING)
+    private FolderStatus status;
 
     @OneToMany(mappedBy = "folder")
     private List<File> files;
@@ -59,12 +62,13 @@ private List<Folder> subFolders;
     public void setSubFolders(List<Folder> subFolders) {
         this.subFolders = subFolders;
     }
-    public Folder(String name, User owner, Folder parentFolder, List<File> files, List<Folder> subFolders) {
+    public Folder(String name, User owner, Folder parentFolder, List<File> files, List<Folder> subFolders,FolderStatus status) {
         this.name = name;
         this.owner = owner;
         this.parentFolder = parentFolder;
         this.files = files;
         this.subFolders = subFolders;
+        this.status = status;
 
     }   public List<File> getFiles() {
         return files;
