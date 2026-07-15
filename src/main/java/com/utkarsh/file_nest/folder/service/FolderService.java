@@ -6,6 +6,7 @@ import com.utkarsh.file_nest.Exceptions.FolderNotFoundException;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
 import com.utkarsh.file_nest.entity.Folder;
 import com.utkarsh.file_nest.entity.User;
+import com.utkarsh.file_nest.enums.FolderStatus;
 import com.utkarsh.file_nest.folder.dto.CreateFolderRequest;
 import com.utkarsh.file_nest.folder.dto.FolderResponse;
 import com.utkarsh.file_nest.folder.dto.RenameFolderRequest;
@@ -39,11 +40,15 @@ public class FolderService {
                 parentFolderId
         );
     }
-private Folder folderVerification(Long folderId){
+private Folder findOwnedFolder(Long folderId){
         Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new FolderNotFoundException("Folder Not Found"));
+    if(folder.getStatus()==(FolderStatus.DELETED)){
+        throw new FolderNotFoundException("This Folder was Deleted");
+    }
     if(!folder.getOwner().getId().equals(loggedUser.getLoggedUser().getId())){
         throw new FolderAccessDenailedException("Not Authorized to Access this Folder");
     }
+
     return folder;
 }
 
@@ -72,7 +77,7 @@ private Folder folderVerification(Long folderId){
     public FolderResponse getFolder(Long folderId) {
 
 
-        Folder folder = folderVerification(folderId);
+        Folder folder = findOwnedFolder(folderId);
 
 
        return mapToFolderResponse(folder);
@@ -81,7 +86,7 @@ private Folder folderVerification(Long folderId){
     public List<FolderResponse> getAllFolders() {
 User user = loggedUser.getLoggedUser();
 
-List<Folder> folders = folderRepository.findByOwner(user);
+List<Folder> folders = folderRepository.findByOwnerAndStatus(user, FolderStatus.ACTIVE);
 
 return folders.stream().map(this::mapToFolderResponse).toList();
     }
@@ -89,9 +94,9 @@ return folders.stream().map(this::mapToFolderResponse).toList();
 
     public FolderResponse renameFolder(Long folderId, RenameFolderRequest request){
 
-        Folder folder = folderVerification(folderId);
+        Folder folder = findOwnedFolder(folderId);
 
-        Optional<Folder> exisitingFolder = folderRepository.findByOwnerAndParentFolderAndName(folder.getOwner(),folder.getParentFolder(), request.getFolderName());
+        Optional<Folder> exisitingFolder = folderRepository.findByOwnerAndParentFolderAndNameAndStatus(folder.getOwner(),folder.getParentFolder(), request.getFolderName(), FolderStatus.ACTIVE);
         if(exisitingFolder.isPresent() && exisitingFolder.get().getId()!=folder.getId()){
             throw new FolderAlreadyExistsException("Folder Already Exists");
         }

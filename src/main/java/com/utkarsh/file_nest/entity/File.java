@@ -47,7 +47,7 @@ private User owner;
 private Folder folder;
 
 @Enumerated(EnumType.STRING)
-private FileStatus status; 
+private FileStatus status = FileStatus.UPLOADED;
 
 @Column(nullable = false)
 private LocalDate createdAt = LocalDate.now();

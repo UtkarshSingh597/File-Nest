@@ -47,7 +47,7 @@ public class Folder {
     }
 
     @Enumerated(EnumType.STRING)
-    private FolderStatus status;
+    private FolderStatus status = FolderStatus.ACTIVE;
 
     @OneToMany(mappedBy = "folder")
     private List<File> files;
@@ -62,13 +62,13 @@ private List<Folder> subFolders;
     public void setSubFolders(List<Folder> subFolders) {
         this.subFolders = subFolders;
     }
-    public Folder(String name, User owner, Folder parentFolder, List<File> files, List<Folder> subFolders,FolderStatus status) {
+    public Folder(String name, User owner, Folder parentFolder, List<File> files, List<Folder> subFolders) {
         this.name = name;
         this.owner = owner;
         this.parentFolder = parentFolder;
         this.files = files;
         this.subFolders = subFolders;
-        this.status = status;
+
 
     }   public List<File> getFiles() {
         return files;
