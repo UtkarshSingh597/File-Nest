@@ -48,4 +48,9 @@ public class FolderController {
         FolderResponse response = folderService.renameFolder(folderId,request);
         return  ResponseEntity.ok(response);
     }
+    @DeleteMapping("/{folderId")
+    public ResponseEntity<Void>deleteFolder(@PathVariable Long folderId){
+        folderService.deleteFolder(folderId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -4,14 +4,18 @@ import com.utkarsh.file_nest.Exceptions.FolderAccessDenailedException;
 import com.utkarsh.file_nest.Exceptions.FolderAlreadyExistsException;
 import com.utkarsh.file_nest.Exceptions.FolderNotFoundException;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
+import com.utkarsh.file_nest.entity.File;
 import com.utkarsh.file_nest.entity.Folder;
 import com.utkarsh.file_nest.entity.User;
+import com.utkarsh.file_nest.enums.FileStatus;
 import com.utkarsh.file_nest.enums.FolderStatus;
 import com.utkarsh.file_nest.folder.dto.CreateFolderRequest;
 import com.utkarsh.file_nest.folder.dto.FolderResponse;
 import com.utkarsh.file_nest.folder.dto.RenameFolderRequest;
 import com.utkarsh.file_nest.repository.FolderRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import com.utkarsh.file_nest.repository.FileRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,13 +23,14 @@ import java.util.Optional;
 @Service
 public class FolderService {
 
+    private FileRepository fileRepository;
     private FolderRepository folderRepository;
     private LoggedUser loggedUser;
 
-    public FolderService(FolderRepository folderRepository, LoggedUser loggedUser){
+    public FolderService(FolderRepository folderRepository, LoggedUser loggedUser, FileRepository fileRepository){
         this.folderRepository = folderRepository;
         this.loggedUser= loggedUser;
-
+        this.fileRepository = fileRepository;
     }
 
     private FolderResponse mapToFolderResponse(Folder folder){
@@ -40,6 +45,7 @@ public class FolderService {
                 parentFolderId
         );
     }
+
 private Folder findOwnedFolder(Long folderId){
         Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new FolderNotFoundException("Folder Not Found"));
     if(folder.getStatus()==(FolderStatus.DELETED)){
@@ -52,6 +58,33 @@ private Folder findOwnedFolder(Long folderId){
     return folder;
 }
 
+
+    private void deleteFolderRecursively(Folder folder){
+
+
+        List<Folder>childFolders = folderRepository.findByParentFolderAndStatus(
+                folder,
+                FolderStatus.ACTIVE
+        );
+
+        for(Folder childFolder : childFolders){
+            deleteFolderRecursively(childFolder);
+        }
+
+        List<File>files = fileRepository.findByFolderAndStatusNot(
+                folder,
+                FileStatus.DELETED
+        );
+
+        for(File file:files){
+            file.setStatus(FileStatus.DELETED);
+
+        }
+        fileRepository.saveAll(files);
+
+      folder.setStatus(FolderStatus.DELETED);
+        folderRepository.save(folder);
+}
 
     public FolderResponse createFolder(CreateFolderRequest request){
         User user = loggedUser.getLoggedUser();
@@ -106,5 +139,10 @@ folder.setName(request.getFolderName());
         return mapToFolderResponse(updatedFolder);
 
 
+    }
+@Transactional
+    public void deleteFolder(Long folderId) {
+        Folder folder = findOwnedFolder(folderId);
+        deleteFolderRecursively(folder);
     }
 }
