@@ -1,19 +1,9 @@
 package com.utkarsh.file_nest.entity;
 
-import java.time.LocalDate;
-
 import com.utkarsh.file_nest.enums.FileStatus;
+import jakarta.persistence.*;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 
 // id
@@ -54,15 +44,16 @@ private User owner;
 
 @ManyToOne
 @JoinColumn(name = "folder_id")
-private Folders folder;
+private Folder folder;
 
 @Enumerated(EnumType.STRING)
-private FileStatus status; 
+private FileStatus status = FileStatus.UPLOADED;
 
 @Column(nullable = false)
 private LocalDate createdAt = LocalDate.now();
 
-    public File( Folders folder,  String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
+
+    public File(Folder folder, String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
        
         this.folder = folder;
        
@@ -109,10 +100,10 @@ public User getOwner() {
 public void setOwner(User owner) {
     this.owner = owner;
 }
-public Folders getFolder() {
+public Folder getFolder() {
     return folder;
 }
-public void setFolder(Folders folder) {
+public void setFolder(Folder folder) {
     this.folder = folder;
 }
 public FileStatus getStatus() {
