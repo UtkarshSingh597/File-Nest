@@ -2,8 +2,8 @@
 
 - [x] Register
 - [x] Login
-- [ ] JWT Service
-- [ ] JWT Filter
+- [x] JWT Service
+- [x] JWT Filter
 
 # File Storage
 

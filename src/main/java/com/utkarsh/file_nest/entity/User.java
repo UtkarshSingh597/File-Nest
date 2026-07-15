@@ -1,15 +1,8 @@
 package com.utkarsh.file_nest.entity;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-
 
 
 @Entity
@@ -22,7 +15,7 @@ public User(){
 
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
-private long id;
+private Long id;
 
 @Column(nullable = false)
 private String name;
@@ -45,12 +38,12 @@ public User( String name, String email, String password) {
 }
 
 
-public long getId() {
+public Long getId() {
     return id;
 }
 
 
-public void setId(long id) {
+public void setId(Long id) {
     this.id = id;
 }
 

@@ -18,7 +18,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleInvalidCredentials(InvalidCredentialsException ex){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
-        
+
+    @ExceptionHandler(FolderNotFoundException.class)
+         public ResponseEntity<?>handleFolderExists(FolderNotFoundException ex){
+             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+@ExceptionHandler(FolderAccessDenailedException.class)
+    public ResponseEntity<?>handleFolderAccess(FolderAccessDenailedException ex){
+         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+}
+        @ExceptionHandler(FolderAlreadyExistsException.class)
+    public ResponseEntity<?>handleFolderAlreadyExisits(FolderAlreadyExistsException ex){
+         return  ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        }
     }
  
 
