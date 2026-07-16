@@ -235,7 +235,7 @@ Folder APIs tested
 - [x] Get Folder
 - [x] Get All Folders
 - [x] Rename Folder
-- [ ] Recursive Delete
+- [x] Recursive Delete
 
 ---
 
