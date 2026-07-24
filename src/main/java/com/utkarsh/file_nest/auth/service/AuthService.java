@@ -1,11 +1,5 @@
 package com.utkarsh.file_nest.auth.service;
 
-import java.util.Optional;
-
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.utkarsh.file_nest.Exceptions.EmailAlreadyExistsException;
 import com.utkarsh.file_nest.Exceptions.InvalidCredentialsException;
 import com.utkarsh.file_nest.auth.dto.AuthResponse;
@@ -14,7 +8,12 @@ import com.utkarsh.file_nest.auth.dto.RegisterRequest;
 import com.utkarsh.file_nest.entity.User;
 import com.utkarsh.file_nest.repository.UserRepository;
 import com.utkarsh.file_nest.security.JwtService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 
 
 @Service
@@ -45,7 +44,7 @@ public AuthResponse login(LoginRequest request){
     String token = jwtService.generateToken(user.getEmail());
     return new AuthResponse(token);
 }
-
+@Transactional
 public AuthResponse register(RegisterRequest request){
     Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 

@@ -13,7 +13,7 @@ public class CreateFolderRequest {
         return parentFolderId;
     }
 
-    public void setParentFolderId(Long parentFolder) {
+    public void setParentFolderId(Long parentFolderId) {
         this.parentFolderId = parentFolderId;
     }
 

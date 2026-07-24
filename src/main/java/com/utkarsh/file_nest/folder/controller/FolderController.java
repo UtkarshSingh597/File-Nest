@@ -5,7 +5,6 @@ import com.utkarsh.file_nest.folder.dto.CreateFolderRequest;
 import com.utkarsh.file_nest.folder.dto.FolderResponse;
 import com.utkarsh.file_nest.folder.dto.RenameFolderRequest;
 import com.utkarsh.file_nest.folder.service.FolderService;
-import com.utkarsh.file_nest.repository.FolderRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +17,12 @@ import java.util.List;
 public class FolderController {
 
     private final FolderService folderService;
-    private final FolderRepository folderRepository;
 
 
-    public FolderController(FolderService folderService, FolderRepository folderRepository){
+    public FolderController(FolderService folderService){
         this.folderService = folderService;
-        this.folderRepository = folderRepository;
+
+
     }
     @PostMapping
     public ResponseEntity<FolderResponse>createFolder(@Valid @RequestBody CreateFolderRequest request){
@@ -48,7 +47,7 @@ public class FolderController {
         FolderResponse response = folderService.renameFolder(folderId,request);
         return  ResponseEntity.ok(response);
     }
-    @DeleteMapping("/{folderId")
+    @DeleteMapping("/{folderId}")
     public ResponseEntity<Void>deleteFolder(@PathVariable Long folderId){
         folderService.deleteFolder(folderId);
         return ResponseEntity.noContent().build();
