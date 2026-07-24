@@ -169,35 +169,6 @@ as `DELETED`.
 
 ---
 
-## Exception Handling
-
-- [x] EmailAlreadyExistsException
-- [x] InvalidCredentialsException
-- [x] FolderNotFoundException
-- [x] FolderAlreadyExistsException
-- [x] FolderAccessDeniedException
-- [x] GlobalExceptionHandler
-
----
-
-## Testing
-
-Authentication tested using Postman
-
-- [x] Register
-- [x] Login
-- [x] JWT Authentication
-
-Folder APIs tested
-
-- [x] Create Folder
-- [x] Get Folder
-- [x] Get All Folders
-- [x] Rename Folder
-- [ ] Recursive Delete
-
----
-
 # Folder Service Design
 
 ```
