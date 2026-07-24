@@ -1,31 +1,52 @@
-# FileNest - Project Context
+# FileNest
 
-A production-style cloud file storage platform inspired by Google Drive and Dropbox.
+FileNest is a production-inspired cloud file storage backend built with Spring Boot. The project is designed to explore how modern storage platforms such as Google Drive and Dropbox are architected while following clean backend design principles.
 
-The primary goal of this project is to learn backend engineering by implementing production-quality architecture, security, scalability, and clean code practices.
-
----
-
-# Project Goal
-
-Build a scalable cloud storage backend while learning:
-
-- Spring Boot ecosystem
-- Authentication & Authorization
-- Database design
-- REST API development
-- Distributed systems concepts
-- Cloud storage integration
-- Production-ready architecture
+The current implementation focuses on authentication, folder management, secure file uploads, and a layered architecture that can later evolve into a distributed storage platform.
 
 ---
 
-# Tech Stack
+# Table of Contents
+
+- Overview
+- Technology Stack
+- Architecture
+- Project Structure
+- Authentication
+- Folder Management
+- File Management
+- Database Design
+- API Endpoints
+- Running the Project
+- Future Enhancements
+
+---
+
+# Overview
+
+FileNest provides a secure backend for managing folders and files.
+
+Current capabilities include:
+
+- JWT based authentication
+- Secure password hashing with BCrypt
+- Folder creation and nested folder hierarchy
+- Recursive folder deletion using soft delete
+- File upload with metadata storage
+- Ownership-based authorization
+- Local file storage
+
+The application follows a layered architecture to keep responsibilities separated and the codebase maintainable.
+
+---
+
+# Technology Stack
 
 ## Backend
 
 - Java 21
-- Spring Boot 3.5
+- Spring Boot
+- Spring MVC
 - Spring Security
 - Spring Data JPA
 - Hibernate
@@ -38,303 +59,370 @@ Build a scalable cloud storage backend while learning:
 ## Authentication
 
 - JWT
-- BCrypt Password Encoding
+- BCrypt Password Encoder
 
-## Planned Technologies
+## Storage
 
-- Redis
-- RabbitMQ
-- MinIO
-- AWS S3
-- Docker
-- Docker Compose
-- JUnit
-- Mockito
-- GitHub Actions
+- Local File System
 
 ---
 
 # Architecture
 
 ```
+                    Client
+                       │
+                       ▼
+                REST Controller
+                       │
+                       ▼
+                    Service
+               ┌────────┴────────┐
+               ▼                 ▼
+         Repository        Local Storage
+               │
+               ▼
+             MySQL
+```
+
+The controller receives HTTP requests and delegates work to the service layer.
+
+The service contains the application's business logic, performs validation and authorization, interacts with repositories, stores uploaded files, and converts entities into response DTOs.
+
+Repositories communicate with the database using Spring Data JPA.
+
+---
+
+# Project Structure
+
+```
+src
+└── main
+    ├── java
+    │   └── com.utkarsh.file_nest
+    │       ├── auth
+    │       ├── config
+    │       ├── entity
+    │       ├── Exceptions
+    │       ├── File
+    │       ├── folder
+    │       ├── repository
+    │       └── security
+    │
+    └── resources
+        ├── db
+        └── application.properties
+```
+
+---
+
+# Authentication
+
+Authentication is implemented using JSON Web Tokens (JWT).
+
+## Registration Flow
+
+```
 Client
-   │
-   ▼
-Controller
-   │
-   ▼
-Service
-   │
-   ▼
-Repository
-   │
-   ▼
-MySQL
+
+    │
+
+Register Request
+
+    │
+
+Validate Request
+
+    │
+
+Check Existing Email
+
+    │
+
+Encrypt Password
+
+    │
+
+Save User
+
+    │
+
+Generate JWT
+
+    │
+
+Return Token
 ```
 
-## Responsibilities
+## Login Flow
 
-### Controller
+```
+Client
 
-- Accept HTTP requests
-- Validate DTOs
-- Return responses
-- No business logic
+    │
 
-### Service
+Login Request
 
-- Business logic
-- Validation
-- Authorization
-- Transaction management
+    │
 
-### Repository
+Find User
 
-- Database operations only
-- No business logic
+    │
+
+Verify Password
+
+    │
+
+Generate JWT
+
+    │
+
+Return Token
+```
+
+All protected endpoints require a valid JWT.
 
 ---
 
-# Package Structure
+# Folder Management
+
+Folders support hierarchical organization.
+
+Example:
 
 ```
-com.utkarsh.file_nest
+Documents
 │
-├── auth
-│   ├── controller
-│   ├── dto
-│   └── service
+├── College
 │
-├── config
+├── Projects
+│   ├── FileNest
+│   └── Search Engine
 │
-├── entity
-│
-├── repository
-│
-├── exception
-│
-├── security
-│
-├── user
-│
-├── folder
-│
-└── file
+└── Notes
+```
+
+Each folder belongs to a single user.
+
+Folder operations validate ownership before allowing access.
+
+Folders are soft deleted rather than permanently removed, allowing the application to preserve relationships between resources.
+
+---
+
+# File Management
+
+Uploaded files follow the workflow below.
+
+```
+Receive Multipart File
+
+        │
+
+Validate Request
+
+        │
+
+Get Logged User
+
+        │
+
+Verify Folder Access
+
+        │
+
+Generate UUID Filename
+
+        │
+
+Store File Locally
+
+        │
+
+Save Metadata
+
+        │
+
+Return File Response
+```
+
+The physical file is stored inside the local uploads directory while metadata is stored inside MySQL.
+
+Metadata includes:
+
+- Original filename
+- Generated storage filename
+- File size
+- MIME type
+- Owner
+- Parent folder
+- Upload timestamp
+- File status
+
+Using UUID filenames prevents collisions when different users upload files with identical names.
+
+---
+
+# Database Design
+
+## User
+
+```
+id
+username
+email
+password
+createdAt
+```
+
+## Folder
+
+```
+id
+name
+owner
+parentFolder
+status
+createdAt
+```
+
+## File
+
+```
+id
+originalName
+storedName
+size
+mimeType
+owner
+folder
+status
+createdAt
+```
+
+Relationships:
+
+```
+User
+ │
+ ├──── Folder
+ │          │
+ │          ├──── Folder
+ │          │
+ │          └──── File
+ │
+ └──── File
 ```
 
 ---
 
-# Coding Standards
-
-- Constructor Injection
-- No Field Injection (`@Autowired`)
-- DTOs for Requests & Responses
-- ResponseEntity from Controllers
-- Custom Exceptions
-- Global Exception Handling (`@RestControllerAdvice`)
-- Optional instead of null
-- BCrypt Password Hashing
-- Never expose entities directly
-- Thin Controllers
-- Business Logic inside Services
-- Constructor-based dependency injection
-- Soft Delete instead of Hard Delete where applicable
-- Reusable helper methods to avoid duplicated business logic
-
----
-
-
-### Folder Design
-
-Folders support recursive hierarchy.
-
-Folder deletion is implemented using **recursive soft delete**.
-
-```
-Parent Folder
-      │
-      ├── Child Folder
-      │       └── Child Folder
-      │
-      └── Files
-```
-
-Deleting a folder recursively marks:
-
-- Parent Folder
-- Child Folders
-- Files
-
-as `DELETED`.
-
----
-
-# Folder Service Design
-
-```
-Controller
-
-↓
-
-FolderService
-
-↓
-
-getOwnedFolder()
-
-↓
-
-Business Logic
-
-↓
-
-Repository
-```
-
-Reusable helper methods
-
-- mapToFolderResponse()
-- getOwnedFolder()
-
-Authentication is handled through:
-
-- LoggedUser Service
-
----
-
-# Current Feature
-
-## File Management
-
-Next module:
-
-- Upload File
-
----
-
-# Roadmap
+# API Endpoints
 
 ## Authentication
 
-- [x] Registration
-- [x] Login
-- [x] JWT Authentication
-- [ ] Role-Based Authorization
+```
+POST /api/auth/register
+
+POST /api/auth/login
+```
+
+## Folder
+
+```
+POST   /api/folders
+
+GET    /api/folders/{id}
+
+PUT    /api/folders/{id}
+
+DELETE /api/folders/{id}
+```
+
+## Files
+
+```
+POST /api/files/upload
+```
+
+Request Parameters
+
+```
+MultipartFile file
+
+Long folderId (optional)
+```
 
 ---
 
-## Folder Management
+# Running the Project
 
-- [x] Create Folder
-- [x] Get Folder
-- [x] Get All Folders
-- [x] Rename Folder
-- [x] Recursive Soft Delete
-- [ ] Restore Folder
-- [ ] Move Folder
+Clone the repository.
 
----
+```bash
+git clone <repository-url>
+```
 
-## File Management
+Configure the database inside `application.properties`.
 
-- [ ] Upload File
-- [ ] Download File
-- [ ] Get File Metadata
-- [ ] List Files
-- [ ] Rename File
-- [ ] Delete File
-- [ ] Restore File
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/file_nest
+spring.datasource.username=root
+spring.datasource.password=your_password
+```
 
----
+Run Flyway migrations and start the application.
 
-## Sharing
+```bash
+mvn spring-boot:run
+```
 
-- [ ] Public Links
-- [ ] Shared Folders
-- [ ] Access Permissions
+The application starts on:
+
+```
+http://localhost:8080
+```
 
 ---
 
-## Cloud Storage
+# Design Principles
 
-- [ ] MinIO
-- [ ] AWS S3
+The project follows several backend engineering principles:
 
----
+- Layered Architecture
+- Separation of Concerns
+- Constructor Injection
+- DTO-based communication
+- Ownership-based Authorization
+- Soft Delete Strategy
+- RESTful API Design
 
-## Performance
-
-- [ ] Redis
-- [ ] RabbitMQ
-- [ ] Async Processing
-
----
-
-## Deployment
-
-- [ ] Docker
-- [ ] Docker Compose
-- [ ] GitHub Actions
+These principles make the codebase easier to maintain, extend, and test.
 
 ---
 
-## Testing
+# Future Enhancements
 
-- [ ] JUnit
-- [ ] Mockito
-- [ ] Integration Tests
+The current implementation uses local storage as the persistence layer for uploaded files.
 
----
+Future versions of FileNest will introduce:
 
-# Learning Objectives
-
-- Spring Boot
-- Spring Security
-- JWT
-- REST APIs
-- Database Design
-- Flyway
-- File Storage
-- Object Storage
-- Distributed Systems
-- Redis
-- RabbitMQ
-- Docker
-- CI/CD
-- Testing
+- File download
+- File deletion
+- File sharing
+- Search functionality
+- MinIO or AWS S3 integration
+- Redis caching
+- RabbitMQ for asynchronous processing
+- Virus scanning
+- Thumbnail generation
+- Docker support
+- Unit and integration testing
+- CI/CD pipeline
 
 ---
 
-# Development Principles
+# Author
 
-- Thin Controllers
-- Business Logic inside Services
-- Repository only accesses the database
-- DTOs for API communication
-- SOLID Principles
-- Clean Architecture
-- Soft Delete instead of Hard Delete
-- Recursive algorithms for hierarchical data
-- Readable and maintainable code
-- Production-ready design
+**Utkarsh Singh**
 
----
-
-# Current Status
-
-## Completed Milestone
-
-Authentication ✅
-
-Folder Management ✅
-
-## Current Milestone
-
-File Management
-
-### Next Feature
-
-- File Upload API
-- MultipartFile
-- Metadata Storage
-- Local Storage (before MinIO)
+FileNest is a learning-focused backend engineering project that aims to demonstrate production-oriented software design, scalable architecture, and modern Java backend development using Spring Boot.
