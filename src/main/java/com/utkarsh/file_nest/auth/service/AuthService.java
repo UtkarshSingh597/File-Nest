@@ -1,7 +1,7 @@
 package com.utkarsh.file_nest.auth.service;
 
-import com.utkarsh.file_nest.Exceptions.EmailAlreadyExistsException;
-import com.utkarsh.file_nest.Exceptions.InvalidCredentialsException;
+import com.utkarsh.file_nest.Exceptions.ConflictException;
+import com.utkarsh.file_nest.Exceptions.UnAuthorizedException;
 import com.utkarsh.file_nest.auth.dto.AuthResponse;
 import com.utkarsh.file_nest.auth.dto.LoginRequest;
 import com.utkarsh.file_nest.auth.dto.RegisterRequest;
@@ -38,7 +38,7 @@ public AuthResponse login(LoginRequest request){
         .orElseThrow(() -> new UsernameNotFoundException("User Does not Exists"));
 
     if(!passwordEncoder.matches(request.getPassword(),user.getPassword())){
-        throw new InvalidCredentialsException("Invalid Email or Password");
+        throw new UnAuthorizedException("Invalid Email or Password");
     }
 
     String token = jwtService.generateToken(user.getEmail());
@@ -49,7 +49,7 @@ public AuthResponse register(RegisterRequest request){
     Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
     if(existingUser.isPresent()){
-        throw new EmailAlreadyExistsException ("This Email Already Exists");
+        throw new ConflictException("This Email Already Exists");
     }
 
     String hashedPassword = passwordEncoder.encode(request.getPassword());

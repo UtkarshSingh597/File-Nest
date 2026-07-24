@@ -1,7 +1,7 @@
 package com.utkarsh.file_nest.File.Service;
 
 
-import com.utkarsh.file_nest.Exceptions.FileEmptyException;
+import com.utkarsh.file_nest.Exceptions.BadRequest;
 import com.utkarsh.file_nest.File.DTO.FileResponse;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
 import com.utkarsh.file_nest.entity.Folder;
@@ -30,7 +30,7 @@ public class FileService {
     public FileResponse uploadFile(MultipartFile file, Long folderId) {
         MultipartFile File = file;
         if (file == null || file.isEmpty()) {
-            throw new FileEmptyException("File is Empty");
+            throw new BadRequest("File is Empty");
         }
         User user = loggedUser.getLoggedUser();
 

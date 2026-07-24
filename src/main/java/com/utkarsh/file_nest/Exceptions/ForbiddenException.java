@@ -1,7 +1,7 @@
 package com.utkarsh.file_nest.Exceptions;
 
-public class FolderAlreadyExistsException extends RuntimeException{
-    public FolderAlreadyExistsException(String message){
+public class ForbiddenException extends RuntimeException{
+    public ForbiddenException(String message){
         super(message);
     }
 }

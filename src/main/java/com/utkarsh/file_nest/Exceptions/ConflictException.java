@@ -3,9 +3,9 @@ package com.utkarsh.file_nest.Exceptions;
 
 
 
-public class EmailAlreadyExistsException extends RuntimeException{
+public class ConflictException extends RuntimeException{
 
-    public EmailAlreadyExistsException(String message){
+    public ConflictException(String message){
         super(message);
     }
 

@@ -9,30 +9,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
 
-     @ExceptionHandler(EmailAlreadyExistsException.class)
-        public ResponseEntity<?> handleEmailExists (EmailAlreadyExistsException ex){
+     @ExceptionHandler(ConflictException.class)
+        public ResponseEntity<?> conflictException (ConflictException ex){
        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());    
         }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<?> handleInvalidCredentials(InvalidCredentialsException ex){
+    @ExceptionHandler(UnAuthorizedException.class)
+    public ResponseEntity<?> unauthorizedException(UnAuthorizedException ex){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
-    @ExceptionHandler(FolderNotFoundException.class)
-         public ResponseEntity<?>handleFolderExists(FolderNotFoundException ex){
+    @ExceptionHandler(CustomNotFoundException.class)
+         public ResponseEntity<?>notFoundException(CustomNotFoundException ex){
              return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
-@ExceptionHandler(FolderAccessDenailedException.class)
-    public ResponseEntity<?>handleFolderAccess(FolderAccessDenailedException ex){
+@ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<?>handleFolderAccess(ForbiddenException ex){
          return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
 }
-        @ExceptionHandler(FolderAlreadyExistsException.class)
-    public ResponseEntity<?>handleFolderAlreadyExists(FolderAlreadyExistsException ex){
-         return  ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
-        }
-        @ExceptionHandler(FileEmptyException.class)
-    public ResponseEntity<?>handleEmptyFileException(FileEmptyException ex){
+        @ExceptionHandler(BadRequest.class)
+    public ResponseEntity<?>handleEmptyFileException(BadRequest ex){
          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
     }
