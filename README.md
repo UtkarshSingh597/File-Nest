@@ -143,47 +143,6 @@ com.utkarsh.file_nest
 
 ---
 
-# Current Progress
-
-## Database
-
-- [x] User Entity
-- [x] Folder Entity
-- [x] File Entity
-- [x] FolderStatus Enum
-- [x] FileStatus Enum
-- [x] JPA Repositories
-
----
-
-## Authentication
-
-- [x] Register
-- [x] Login
-- [x] JWT Service
-- [x] JWT Authentication Filter
-- [x] Spring Security Configuration
-- [x] BCrypt Password Encoding
-- [x] Protected APIs
-- [x] Bearer Token Authentication
-- [x] LoggedUser Service
-
----
-
-## Folder Management
-
-### Implemented
-
-- [x] Create Folder
-- [x] Get Folder
-- [x] Get All Folders
-- [x] Rename Folder
-- [x] Recursive Soft Delete
-- [x] Nested Folder Support
-- [x] Folder Ownership Validation
-- [x] Duplicate Folder Name Validation
-- [x] Folder DTO Mapping
-- [x] Folder Status Filtering
 
 ### Folder Design
 
