@@ -24,7 +24,6 @@ public interface FolderRepository extends JpaRepository<Folder,Long> {
             FolderStatus status
     );
 
-    List<Folder> findByParentAndStatus (Folder parentFolder, FolderStatus status);
 
 
 

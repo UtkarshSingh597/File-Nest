@@ -46,7 +46,7 @@ public class FolderService {
         );
     }
 
-private Folder findOwnedFolder(Long folderId){
+public Folder findOwnedFolder(Long folderId){
         Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new FolderNotFoundException("Folder Not Found"));
     if(folder.getStatus()==(FolderStatus.DELETED)){
         throw new FolderNotFoundException("This Folder was Deleted");
@@ -91,14 +91,18 @@ private Folder findOwnedFolder(Long folderId){
 
         Folder parentFolder = null;
 
+
+
         if(request.getParentFolderId() != null ){
-            parentFolder = folderRepository.findById(request.getParentFolderId())
-                    .orElseThrow(()-> new RuntimeException("Parent Folder not found"));
+            parentFolder = findOwnedFolder(request.getParentFolderId());
         }
+
+
 
         Folder folder = new Folder();
         folder.setName(request.getFolderName());
         folder.setOwner(user);
+        folder.setParentFolder(parentFolder);
 
         Folder savedFolder = folderRepository.save(folder);
 

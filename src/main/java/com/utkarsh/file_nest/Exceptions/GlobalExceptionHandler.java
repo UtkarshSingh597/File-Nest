@@ -25,12 +25,15 @@ public class GlobalExceptionHandler {
         }
 @ExceptionHandler(FolderAccessDenailedException.class)
     public ResponseEntity<?>handleFolderAccess(FolderAccessDenailedException ex){
-         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
 }
         @ExceptionHandler(FolderAlreadyExistsException.class)
-    public ResponseEntity<?>handleFolderAlreadyExisits(FolderAlreadyExistsException ex){
+    public ResponseEntity<?>handleFolderAlreadyExists(FolderAlreadyExistsException ex){
          return  ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        }
+        @ExceptionHandler(FileEmptyException.class)
+    public ResponseEntity<?>handleEmptyFileException(FileEmptyException ex){
+         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
     }
  
-
