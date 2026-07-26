@@ -239,6 +239,166 @@ class FileServiceTest {
         verifyNoInteractions(fileRepository, loggedUser);
     }
 
+    @Test
+    void uploadFileShouldRejectExecutableFiles() {
+        // Test .exe files
+        MultipartFile exeFile = new MockMultipartFile(
+                "file",
+                "malware.exe",
+                "application/octet-stream",
+                "executable content".getBytes()
+        );
+
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> fileService.uploadFile(exeFile, null)
+        );
+
+        assertThat(exception.getMessage()).contains("File type not allowed");
+        verifyNoInteractions(fileRepository, loggedUser);
+    }
+
+    @Test
+    void uploadFileShouldRejectShellScripts() {
+        // Test .sh files
+        MultipartFile shFile = new MockMultipartFile(
+                "file",
+                "script.sh",
+                "application/x-sh",
+                "#!/bin/bash".getBytes()
+        );
+
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> fileService.uploadFile(shFile, null)
+        );
+
+        assertThat(exception.getMessage()).contains("File type not allowed");
+        verifyNoInteractions(fileRepository, loggedUser);
+    }
+
+    @Test
+    void uploadFileShouldRejectBatFiles() {
+        // Test .bat files
+        MultipartFile batFile = new MockMultipartFile(
+                "file",
+                "script.bat",
+                "application/x-msdownload",
+                "@echo off".getBytes()
+        );
+
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> fileService.uploadFile(batFile, null)
+        );
+
+        assertThat(exception.getMessage()).contains("File type not allowed");
+        verifyNoInteractions(fileRepository, loggedUser);
+    }
+
+    @Test
+    void uploadFileShouldRejectDllFiles() {
+        // Test .dll files
+        MultipartFile dllFile = new MockMultipartFile(
+                "file",
+                "library.dll",
+                "application/octet-stream",
+                "dll content".getBytes()
+        );
+
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> fileService.uploadFile(dllFile, null)
+        );
+
+        assertThat(exception.getMessage()).contains("File type not allowed");
+        verifyNoInteractions(fileRepository, loggedUser);
+    }
+
+    @Test
+    void uploadFileShouldAllowValidImageFiles() {
+        User user = loggedInUser();
+        when(loggedUser.getLoggedUser()).thenReturn(user);
+
+        MultipartFile imageFile = new MockMultipartFile(
+                "file",
+                "photo.jpg",
+                "image/jpeg",
+                "image content".getBytes()
+        );
+
+        var savedFile = new com.utkarsh.file_nest.entity.File();
+        savedFile.setId(1L);
+        savedFile.setOriginalName("photo.jpg");
+        savedFile.setMimeType("image/jpeg");
+        savedFile.setSize(imageFile.getSize());
+        savedFile.setStatus(FileStatus.UPLOADED);
+
+        when(fileRepository.save(any())).thenReturn(savedFile);
+
+        FileResponse response = fileService.uploadFile(imageFile, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getOriginalName()).isEqualTo("photo.jpg");
+        verify(fileRepository).save(any());
+    }
+
+    @Test
+    void uploadFileShouldAllowValidPdfFiles() {
+        User user = loggedInUser();
+        when(loggedUser.getLoggedUser()).thenReturn(user);
+
+        MultipartFile pdfFile = new MockMultipartFile(
+                "file",
+                "document.pdf",
+                "application/pdf",
+                "%PDF-1.4".getBytes()
+        );
+
+        var savedFile = new com.utkarsh.file_nest.entity.File();
+        savedFile.setId(2L);
+        savedFile.setOriginalName("document.pdf");
+        savedFile.setMimeType("application/pdf");
+        savedFile.setSize(pdfFile.getSize());
+        savedFile.setStatus(FileStatus.UPLOADED);
+
+        when(fileRepository.save(any())).thenReturn(savedFile);
+
+        FileResponse response = fileService.uploadFile(pdfFile, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getOriginalName()).isEqualTo("document.pdf");
+        verify(fileRepository).save(any());
+    }
+
+    @Test
+    void uploadFileShouldAllowValidZipFiles() {
+        User user = loggedInUser();
+        when(loggedUser.getLoggedUser()).thenReturn(user);
+
+        MultipartFile zipFile = new MockMultipartFile(
+                "file",
+                "archive.zip",
+                "application/zip",
+                "PK".getBytes()
+        );
+
+        var savedFile = new com.utkarsh.file_nest.entity.File();
+        savedFile.setId(3L);
+        savedFile.setOriginalName("archive.zip");
+        savedFile.setMimeType("application/zip");
+        savedFile.setSize(zipFile.getSize());
+        savedFile.setStatus(FileStatus.UPLOADED);
+
+        when(fileRepository.save(any())).thenReturn(savedFile);
+
+        FileResponse response = fileService.uploadFile(zipFile, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getOriginalName()).isEqualTo("archive.zip");
+        verify(fileRepository).save(any());
+    }
+
     private User loggedInUser() {
         User user = new User();
         user.setId(7L);

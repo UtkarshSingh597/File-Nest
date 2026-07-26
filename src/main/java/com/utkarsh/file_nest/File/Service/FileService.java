@@ -17,6 +17,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -28,10 +30,59 @@ public class FileService {
     // File size limit: 100MB
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
 
+    // Allowed MIME types (whitelist approach)
+    private static final Set<String> ALLOWED_MIME_TYPES = new HashSet<>(Set.of(
+            // Images
+            "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
+            // Documents
+            "application/pdf", "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "text/plain", "text/csv", "text/html",
+            // Archives
+            "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
+            "application/gzip", "application/x-tar",
+            // Media
+            "audio/mpeg", "audio/wav", "audio/ogg", "video/mp4", "video/mpeg", "video/quicktime"
+    ));
+
+    // Blocked file extensions (dangerous executables)
+    private static final Set<String> BLOCKED_EXTENSIONS = new HashSet<>(Set.of(
+            ".exe", ".bat", ".cmd", ".com", ".pif", ".scr",
+            ".sh", ".bash", ".zsh", ".ksh",
+            ".dll", ".sys", ".drv", ".vxd",
+            ".dmg", ".pkg", ".deb", ".rpm",
+            ".msi", ".msu", ".jar", ".class",
+            ".app", ".apk", ".ipa"
+    ));
+
     private String extractExtention(String fileName) {
         if (fileName == null || !fileName.contains("."))
             return "";
-        return fileName.substring(fileName.lastIndexOf("."));
+        return fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
+    }
+
+    private void validateFileType(MultipartFile file, String fileName) {
+        String mimeType = file.getContentType();
+        String extension = extractExtention(fileName);
+
+        // Check if extension is blocked
+        if (BLOCKED_EXTENSIONS.contains(extension)) {
+            throw new BadRequest("File type not allowed: " + extension);
+        }
+
+        // Validate MIME type against whitelist
+        if (mimeType == null || mimeType.isBlank()) {
+            mimeType = "application/octet-stream";
+        }
+
+        // Check if MIME type is allowed (unless it's octet-stream, which is default for unknown)
+        if (!ALLOWED_MIME_TYPES.contains(mimeType) && !mimeType.equals("application/octet-stream")) {
+            throw new BadRequest("File type not allowed: " + mimeType);
+        }
     }
 
     private final Path rootStroage = Path.of(System.getProperty("user.dir"), "uploads");
@@ -51,16 +102,21 @@ public class FileService {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new BadRequest("File size exceeds maximum limit of 100MB");
         }
+
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isEmpty()) {
+            originalName = "unknow-file";
+        }
+
+        // Validate file type (MIME type and extension)
+        validateFileType(file, originalName);
+
         User user = loggedUser.getLoggedUser();
 
         Folder folder = null;
 
         if (folderId != null) {
             folder = folderService.findOwnedFolder(folderId);
-        }
-        String originalName = file.getOriginalFilename();
-        if (originalName == null || originalName.isEmpty()) {
-            originalName = "unknow-file";
         }
 
         String mineType = file.getContentType();
