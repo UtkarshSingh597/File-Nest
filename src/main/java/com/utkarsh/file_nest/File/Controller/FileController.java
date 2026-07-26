@@ -3,10 +3,7 @@ package com.utkarsh.file_nest.File.Controller;
 import com.utkarsh.file_nest.File.DTO.FileResponse;
 import com.utkarsh.file_nest.File.Service.FileService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/api/files")
@@ -26,5 +23,11 @@ public class FileController {
         return ResponseEntity.ok(response);
 
     }
+
+    @DeleteMapping("/{fileId}")
+        public ResponseEntity<FileResponse> deleteFile(@PathVariable Long fileId){
+        fileService.deleteFile(fileId);
+        return ResponseEntity.noContent().build();
+        }
 
 }
