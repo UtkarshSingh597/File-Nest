@@ -143,6 +143,41 @@ com.utkarsh.file_nest
 
 ---
 
+# 🚨 CRITICAL STATUS UPDATE (July 26, 2026)
+
+## Security Audit Results
+**Overall Score: 6.2/10** - CRITICAL SECURITY GAPS FOUND (5 remaining, 2 fixed)
+
+### 🔴 Critical Issues (5 Remaining)
+1. **Hardcoded credentials in source code** - Database password & JWT secret exposed
+2. **JWT exception handling missing** - Unhandled exceptions cause 500 errors
+3. **Missing file ownership verification** - Unauthorized access possible
+4. **Orphaned files on DB failure** - Storage leaks
+5. **No exception handling in JWT filter** - Server crashes on bad tokens
+
+### ✅ FIXED (2)
+- ✅ **File size validation** - 100MB limit implemented (prevents disk exhaustion DoS)
+- ✅ **File type validation** - MIME whitelist + blocked extensions (prevents malware upload)
+
+### 🟠 High-Risk Issues (7)
+- No rate limiting (brute force attacks)
+- No security event logging
+- No CORS configuration
+- Wrong exception types (information disclosure)
+- No JWT refresh token mechanism
+
+### 🟡 Medium Issues (11)
+- Typos in code (extractExtention, rootStroage, unknow-file)
+- Inconsistent exception naming
+- Field injection violates rules
+- Wrong package naming (File instead of file)
+- No database indexes
+- No input validation
+
+**→ See AUDIT_REPORT.md for full details**
+
+---
+
 # Current Progress
 
 ## Database
@@ -221,64 +256,73 @@ as `DELETED`.
 
 ---
 
-## Testing
-
-Authentication tested using Postman
-
-- [x] Register
-- [x] Login
-- [x] JWT Authentication
-
-Folder APIs tested
-
-- [x] Create Folder
-- [x] Get Folder
-- [x] Get All Folders
-- [x] Rename Folder
-- [x] Recursive Delete
-
----
-
-# Folder Service Design
-
-```
-Controller
-
-↓
-
-FolderService
-
-↓
-
-getOwnedFolder()
-
-↓
-
-Business Logic
-
-↓
-
-Repository
-```
-
-Reusable helper methods
-
-- mapToFolderResponse()
-- getOwnedFolder()
-
-Authentication is handled through:
-
-- LoggedUser Service
-
----
-
-# Current Feature
-
 ## File Management
 
-Next module:
+### Implemented
+- [x] File Entity
+- [x] File Repository
+- [x] File DTO
+- [x] File Upload API ✅ (with security validation)
+- [x] Local File Storage
+- [x] File Metadata Storage
+- [x] File Size Validation (100MB limit)
+- [x] File Type Validation (MIME whitelist + blocked extensions)
+- [ ] File Download API
+- [ ] File Delete API
+- [ ] File Metadata Retrieval
+- [ ] List Files
 
-- Upload File
+### Security Status ✅ IMPROVED
+- ✅ File size validation (100MB limit implemented)
+- ✅ File type validation (MIME whitelist: 35 types, blocked extensions: 19)
+- ❌ No ownership verification for download (next priority)
+- ❌ No soft delete implementation
+- ⚠️ Incomplete feature set
+
+---
+
+## Testing Results
+
+### Unit Tests ✅
+- [x] FileServiceTest: 14/14 PASSED ✅ (added 7 validation tests)
+- [x] FileUploadSmokeTest: 1/1 PASSED ✅
+- [x] FileNestApplicationTests: 1/1 PASSED ✅
+
+**Total: 16/16 tests passing (100% success rate)**
+
+### Test Coverage
+✅ Well-tested:
+- File validation (null, empty)
+- File storage to disk
+- Metadata extraction
+- Database integration
+- File size validation (100MB limit)
+- File type validation (blocked extensions, MIME types)
+- Valid file acceptance (images, documents, archives)
+
+❌ Not tested (PRIORITY):
+- File ownership verification
+- API endpoints
+- Rate limiting
+- JWT exception handling
+- Authentication
+
+**→ See TEST_REPORT.md for details**
+
+---
+
+## Code Quality Issues
+
+### Typos Found (must fix)
+- Line 28: `extractExtention` → should be `extractExtension`
+- Line 34: `rootStroage` → should be `rootStorage`
+- Line 55: `unknow-file` → should be `unknown-file`
+
+### Architecture Violations
+- JwtService uses field injection (@Value) instead of constructor injection
+- File package uses PascalCase instead of lowercase
+
+---
 
 ---
 
@@ -307,7 +351,9 @@ Next module:
 
 ## File Management
 
-- [ ] Upload File
+- [x] Upload File ✅ (with size & type validation)
+- [x] File Size Validation ✅ (100MB limit)
+- [x] File Type Validation ✅ (MIME whitelist + blocked extensions)
 - [ ] Download File
 - [ ] Get File Metadata
 - [ ] List Files

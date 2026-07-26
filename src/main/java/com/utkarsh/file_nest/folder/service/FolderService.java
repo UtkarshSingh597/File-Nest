@@ -1,8 +1,8 @@
 package com.utkarsh.file_nest.folder.service;
 
-import com.utkarsh.file_nest.Exceptions.FolderAccessDenailedException;
-import com.utkarsh.file_nest.Exceptions.FolderAlreadyExistsException;
-import com.utkarsh.file_nest.Exceptions.FolderNotFoundException;
+import com.utkarsh.file_nest.Exceptions.NotFoundException;
+import com.utkarsh.file_nest.Exceptions.ForbiddenException;
+import com.utkarsh.file_nest.Exceptions.CustomNotFoundException;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
 import com.utkarsh.file_nest.entity.File;
 import com.utkarsh.file_nest.entity.Folder;
@@ -47,12 +47,12 @@ public class FolderService {
     }
 
 public Folder findOwnedFolder(Long folderId){
-        Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new FolderNotFoundException("Folder Not Found"));
+        Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new CustomNotFoundException("Folder Not Found"));
     if(folder.getStatus()==(FolderStatus.DELETED)){
-        throw new FolderNotFoundException("This Folder was Deleted");
+        throw new CustomNotFoundException("This Folder was Deleted");
     }
     if(!folder.getOwner().getId().equals(loggedUser.getLoggedUser().getId())){
-        throw new FolderAccessDenailedException("Not Authorized to Access this Folder");
+        throw new NotFoundException("Not Authorized to Access this Folder");
     }
 
     return folder;
@@ -135,7 +135,7 @@ return folders.stream().map(this::mapToFolderResponse).toList();
 
         Optional<Folder> exisitingFolder = folderRepository.findByOwnerAndParentFolderAndNameAndStatus(folder.getOwner(),folder.getParentFolder(), request.getFolderName(), FolderStatus.ACTIVE);
         if(exisitingFolder.isPresent() && exisitingFolder.get().getId()!=folder.getId()){
-            throw new FolderAlreadyExistsException("Folder Already Exists");
+            throw new ForbiddenException("Folder Already Exists");
         }
 folder.setName(request.getFolderName());
         Folder updatedFolder = folderRepository.save(folder);

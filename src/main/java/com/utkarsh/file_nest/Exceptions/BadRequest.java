@@ -1,7 +1,7 @@
 package com.utkarsh.file_nest.Exceptions;
 
-public class FileEmptyException extends RuntimeException{
-    public FileEmptyException(String message){
+public class BadRequest extends RuntimeException{
+    public BadRequest(String message){
         super(message);
     }
 }

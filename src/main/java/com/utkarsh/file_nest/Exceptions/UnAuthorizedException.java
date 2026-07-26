@@ -2,9 +2,9 @@ package com.utkarsh.file_nest.Exceptions;
 
 
 
-public class InvalidCredentialsException extends RuntimeException {
+public class UnAuthorizedException extends RuntimeException {
 
-    public InvalidCredentialsException(String message){
+    public UnAuthorizedException(String message){
         super(message);
     }
 
