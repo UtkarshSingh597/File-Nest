@@ -6,13 +6,6 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
-// id
-// name
-// parentFolder
-// owner
-//files
-// createdAt
-
 @Entity
 @Table(name = "folders")
 public class Folder {

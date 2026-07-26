@@ -27,14 +27,14 @@ public class FileService {
     private final FolderService folderService;
     private final LoggedUser loggedUser;
 
-    // File size limit: 100MB
+
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
 
-    // Allowed MIME types (whitelist approach)
+
     private static final Set<String> ALLOWED_MIME_TYPES = new HashSet<>(Set.of(
-            // Images
+
             "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
-            // Documents
+
             "application/pdf", "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.ms-excel",
@@ -42,14 +42,14 @@ public class FileService {
             "application/vnd.ms-powerpoint",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "text/plain", "text/csv", "text/html",
-            // Archives
+
             "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
             "application/gzip", "application/x-tar",
-            // Media
+
             "audio/mpeg", "audio/wav", "audio/ogg", "video/mp4", "video/mpeg", "video/quicktime"
     ));
 
-    // Blocked file extensions (dangerous executables)
+
     private static final Set<String> BLOCKED_EXTENSIONS = new HashSet<>(Set.of(
             ".exe", ".bat", ".cmd", ".com", ".pif", ".scr",
             ".sh", ".bash", ".zsh", ".ksh",
@@ -69,17 +69,15 @@ public class FileService {
         String mimeType = file.getContentType();
         String extension = extractExtention(fileName);
 
-        // Check if extension is blocked
+
         if (BLOCKED_EXTENSIONS.contains(extension)) {
             throw new BadRequest("File type not allowed: " + extension);
         }
 
-        // Validate MIME type against whitelist
         if (mimeType == null || mimeType.isBlank()) {
             mimeType = "application/octet-stream";
         }
 
-        // Check if MIME type is allowed (unless it's octet-stream, which is default for unknown)
         if (!ALLOWED_MIME_TYPES.contains(mimeType) && !mimeType.equals("application/octet-stream")) {
             throw new BadRequest("File type not allowed: " + mimeType);
         }
@@ -98,7 +96,6 @@ public class FileService {
             throw new BadRequest("File is Empty");
         }
 
-        // Validate file size
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new BadRequest("File size exceeds maximum limit of 100MB");
         }
@@ -108,7 +105,7 @@ public class FileService {
             originalName = "unknow-file";
         }
 
-        // Validate file type (MIME type and extension)
+
         validateFileType(file, originalName);
 
         User user = loggedUser.getLoggedUser();

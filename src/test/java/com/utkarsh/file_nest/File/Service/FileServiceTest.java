@@ -225,10 +225,9 @@ class FileServiceTest {
 
     @Test
     void uploadFileShouldRejectFilesExceeding100MB() {
-        // Create a mock file that exceeds 100MB
         MultipartFile largeFile = org.mockito.Mockito.mock(MultipartFile.class);
         when(largeFile.isEmpty()).thenReturn(false);
-        when(largeFile.getSize()).thenReturn(101 * 1024 * 1024L); // 101MB
+        when(largeFile.getSize()).thenReturn(101 * 1024 * 1024L);
 
         BadRequest exception = assertThrows(
                 BadRequest.class,
@@ -241,7 +240,6 @@ class FileServiceTest {
 
     @Test
     void uploadFileShouldRejectExecutableFiles() {
-        // Test .exe files
         MultipartFile exeFile = new MockMultipartFile(
                 "file",
                 "malware.exe",
@@ -260,7 +258,6 @@ class FileServiceTest {
 
     @Test
     void uploadFileShouldRejectShellScripts() {
-        // Test .sh files
         MultipartFile shFile = new MockMultipartFile(
                 "file",
                 "script.sh",
@@ -279,7 +276,6 @@ class FileServiceTest {
 
     @Test
     void uploadFileShouldRejectBatFiles() {
-        // Test .bat files
         MultipartFile batFile = new MockMultipartFile(
                 "file",
                 "script.bat",
@@ -298,7 +294,6 @@ class FileServiceTest {
 
     @Test
     void uploadFileShouldRejectDllFiles() {
-        // Test .dll files
         MultipartFile dllFile = new MockMultipartFile(
                 "file",
                 "library.dll",

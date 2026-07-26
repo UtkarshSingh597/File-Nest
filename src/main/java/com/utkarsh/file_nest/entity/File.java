@@ -6,16 +6,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 
-// id
-// originalName
-// storedName
-// size
-// mimeType
-// owner
-// folder
-// status
-// createdAt
-
 @Entity
 @Table(name = "files")
 public class File {
