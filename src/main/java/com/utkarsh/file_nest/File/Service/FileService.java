@@ -25,6 +25,9 @@ public class FileService {
     private final FolderService folderService;
     private final LoggedUser loggedUser;
 
+    // File size limit: 100MB
+    private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
+
     private String extractExtention(String fileName) {
         if (fileName == null || !fileName.contains("."))
             return "";
@@ -42,6 +45,11 @@ public class FileService {
     public FileResponse uploadFile(MultipartFile file, Long folderId) {
         if (file == null || file.isEmpty()) {
             throw new BadRequest("File is Empty");
+        }
+
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequest("File size exceeds maximum limit of 100MB");
         }
         User user = loggedUser.getLoggedUser();
 

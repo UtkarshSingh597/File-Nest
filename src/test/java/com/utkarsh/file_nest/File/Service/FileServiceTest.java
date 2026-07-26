@@ -223,6 +223,22 @@ class FileServiceTest {
         verify(fileRepository, never()).save(any());
     }
 
+    @Test
+    void uploadFileShouldRejectFilesExceeding100MB() {
+        // Create a mock file that exceeds 100MB
+        MultipartFile largeFile = org.mockito.Mockito.mock(MultipartFile.class);
+        when(largeFile.isEmpty()).thenReturn(false);
+        when(largeFile.getSize()).thenReturn(101 * 1024 * 1024L); // 101MB
+
+        BadRequest exception = assertThrows(
+                BadRequest.class,
+                () -> fileService.uploadFile(largeFile, null)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("File size exceeds maximum limit of 100MB");
+        verifyNoInteractions(fileRepository, loggedUser);
+    }
+
     private User loggedInUser() {
         User user = new User();
         user.setId(7L);
@@ -232,6 +248,3 @@ class FileServiceTest {
         return user;
     }
 }
-
-
-

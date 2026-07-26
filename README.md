@@ -2,15 +2,47 @@
 
 A production-style cloud file storage backend inspired by **Google Drive** and **Dropbox**.
 
-FileNest is a backend engineering project focused on building a scalable file management system while learning real-world concepts like authentication, authorization, database modeling, REST APIs, file storage architecture, and distributed system design.
+⚠️ **SECURITY AUDIT COMPLETED - CRITICAL ISSUES FOUND**  
+**Current Score: 6.2/10 - NOT PRODUCTION READY**
 
-The goal is not only to build a working application, but to understand how production storage systems are designed.
+---
+
+## ⚠️ Current Status (July 26, 2026)
+
+### Critical Security Issues Found (7)
+🔴 **DO NOT DEPLOY TO PRODUCTION WITHOUT FIXES**
+
+1. **Hardcoded Credentials** - Database password & JWT secret in source code
+2. **No JWT Exception Handling** - Crashes on malformed tokens
+3. **No File Size Validation** - Disk exhaustion attack possible
+4. **No File Type Validation** - Malware upload possible
+5. **Missing Ownership Checks** - Unauthorized file access
+6. **No Security Logging** - Can't detect breaches
+7. **JWT Filter Unprotected** - Server crashes on bad tokens
+
+### Test Results ✅
+- **8/8 Tests Passing** - File upload logic is solid
+- **100% Success Rate** - Core functionality works
+- ⚠️ **Security tests missing** - No validation/ownership tests
+
+### Project Score by Category
+| Category | Score | Status |
+|----------|-------|--------|
+| Architecture | 7.5/10 | ✅ Good |
+| Security | 3.5/10 | 🔴 CRITICAL |
+| Code Quality | 6.0/10 | ⚠️ Fair |
+| Testing | 5.0/10 | ⚠️ Incomplete |
+| Documentation | 5.0/10 | ⚠️ Needs Work |
+| **Overall** | **6.2/10** | 🚫 NOT READY |
+
+**Full Audit:** See `PROJECT_CONTEXT.md` and `AUDIT_REPORT.md`
 
 ---
 
 # Contents
 
-- [What this is](#what-this-is)
+- [Current Status & Audit Results](#-current-status-july-26-2026)
+- [Immediate Actions Required](#-immediate-actions-required)
 - [Architecture](#architecture)
 - [Repository layout](#repository-layout)
 - [Authentication System](#authentication-system)
@@ -19,6 +51,8 @@ The goal is not only to build a working application, but to understand how produ
 - [Database Design](#database-design)
 - [Security Model](#security-model)
 - [Current Implementation](#current-implementation)
+- [Testing](#testing)
+- [Known Issues](#known-issues)
 - [Future Architecture](#future-architecture)
 - [Setup](#setup)
 - [API Endpoints](#api-endpoints)
@@ -26,25 +60,79 @@ The goal is not only to build a working application, but to understand how produ
 
 ---
 
-# What this is
+# 🚨 Immediate Actions Required
 
-FileNest is a cloud storage backend that allows users to:
+## Phase 1: CRITICAL FIXES (This Week)
+**Time: ~8 hours | Priority: URGENT**
 
-- Create and manage folders
-- Create nested folder structures
-- Upload files
-- Store file metadata
-- Secure resources using JWT authentication
-- Control access through ownership validation
+### 1. Secure Credentials
+```bash
+# Move to environment variables - DO NOT COMMIT PASSWORDS
+export DB_USERNAME=your_username
+export DB_PASSWORD=your_password
+export JWT_SECRET=$(openssl rand -hex 32)
+```
 
-The project follows a production-style layered architecture:
+**In application.properties:**
+```properties
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+jwt.secret=${JWT_SECRET}
+```
 
-- Controller layer for API handling
-- Service layer for business logic
-- Repository layer for database communication
-- DTO-based request and response handling
+### 2. Fix JWT Exception Handling
+- Add try-catch in JwtService methods
+- Add exception handling in JwtAuthenticationFilter
+- Return 401 on invalid tokens instead of 500
 
-The current implementation focuses on building a strong backend foundation before introducing advanced distributed system components.
+### 3. Add File Validation
+```java
+// Add file size limit (100MB)
+private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+// Add blocked extensions
+private static final Set<String> BLOCKED_EXTENSIONS = 
+    Set.of(".exe", ".sh", ".bat", ".php", ".jsp", ".asp");
+
+// Validate in uploadFile()
+if (file.getSize() > MAX_FILE_SIZE) {
+    throw new BadRequest("File exceeds 100MB limit");
+}
+```
+
+### 4. Add File Ownership Verification
+```java
+// Implement file download with ownership check
+@GetMapping("/{fileId}/download")
+public ResponseEntity<?> downloadFile(@PathVariable Long fileId) {
+    File file = findOwnedFile(fileId); // Verify ownership
+    return ResponseEntity.ok().body(resource);
+}
+
+private File findOwnedFile(Long fileId) {
+    File file = fileRepository.findById(fileId)
+        .orElseThrow(() -> new CustomNotFoundException("File not found"));
+    
+    if (!file.getOwner().getId().equals(loggedUser.getLoggedUser().getId())) {
+        throw new ForbiddenException("Not authorized");
+    }
+    return file;
+}
+```
+
+## Phase 2: HIGH-PRIORITY FIXES (Next Week)
+- [ ] Add rate limiting to auth endpoints
+- [ ] Implement file delete endpoint (soft delete)
+- [ ] Add security event logging
+- [ ] Fix exception types (ForbiddenException vs NotFoundException)
+- [ ] Add input validation (email format, password strength)
+
+## Phase 3: CODE QUALITY (Week 3)
+- [ ] Fix typos: extractExtention → extractExtension, rootStroage → rootStorage
+- [ ] Rename File package to file (Java convention)
+- [ ] Convert JwtService field injection to constructor injection
+- [ ] Add database indexes for performance
+- [ ] Add CORS configuration
 
 ---
 
@@ -229,7 +317,9 @@ Return Token
 
 # Security Model
 
-Every protected resource follows:
+⚠️ **CURRENT IMPLEMENTATION HAS CRITICAL GAPS** - See [Known Issues](#known-issues)
+
+Every protected resource SHOULD follow:
 
 ```
 Request
@@ -257,9 +347,17 @@ Allow / Reject
 
 Users cannot access:
 
-- Other users' folders
-- Other users' files
-- Deleted resources
+- Other users' folders ✅ (implemented)
+- Other users' files ⚠️ (not fully implemented - no download endpoint)
+- Deleted resources ✅ (implemented)
+
+### Current Security Issues
+- ❌ No file ownership check on download (endpoint missing)
+- ❌ No file size validation (DoS risk)
+- ❌ No file type validation (malware risk)
+- ❌ No rate limiting (brute force risk)
+- ❌ Credentials hardcoded in code (breach risk)
+- ❌ No exception handling in JWT (crash risk)
 
 ---
 
@@ -700,15 +798,80 @@ RabbitMQ will handle:
 - Deployment pipeline
 
 
-## Testing
+---
 
-- JUnit
-- Mockito
-- Integration Testing
+# Testing
+
+## Test Results ✅
+```
+Total Tests:     8
+Passed:          8 ✅
+Failed:          0
+Errors:          0
+Success Rate:    100%
+```
+
+### Test Breakdown
+- **FileServiceTest**: 6/6 PASSED (0.961s)
+  - ✅ Null/empty file validation
+  - ✅ File storage to disk
+  - ✅ Metadata extraction
+  - ✅ Database integration
+  - ✅ Error handling
+
+- **FileUploadSmokeTest**: 1/1 PASSED (0.010s)
+  - ✅ Actual file write verification
+
+- **FileNestApplicationTests**: 1/1 PASSED (4.766s)
+  - ✅ Spring context loads
+
+### Missing Test Coverage ⚠️
+- ❌ File size validation tests
+- ❌ File type validation tests
+- ❌ Ownership verification tests
+- ❌ API endpoint tests
+- ❌ Security/authentication tests
+- ❌ Rate limiting tests
+
+**→ See TEST_REPORT.md for detailed results**
+
+### Run Tests
+```bash
+mvn clean test
+```
 
 ---
 
-# Setup
+# Known Issues
+
+## 🔴 CRITICAL (Fix before production)
+| Issue | Severity | Status |
+|-------|----------|--------|
+| Hardcoded credentials | CRITICAL | ⚠️ NOT FIXED |
+| JWT exception handling | CRITICAL | ⚠️ NOT FIXED |
+| No file size validation | CRITICAL | ⚠️ NOT FIXED |
+| No file type validation | CRITICAL | ⚠️ NOT FIXED |
+| Missing ownership verification | CRITICAL | ⚠️ NOT FIXED |
+
+## 🟠 HIGH (Fix soon)
+| Issue | Severity | Status |
+|-------|----------|--------|
+| No rate limiting | HIGH | ⚠️ NOT FIXED |
+| No security logging | HIGH | ⚠️ NOT FIXED |
+| No CORS configuration | HIGH | ⚠️ NOT FIXED |
+| Wrong exception types | HIGH | ⚠️ NOT FIXED |
+
+## 🟡 MEDIUM (Fix when possible)
+| Issue | Severity | Status |
+|-------|----------|--------|
+| Code typos | MEDIUM | ⚠️ NOT FIXED |
+| Package naming | MEDIUM | ⚠️ NOT FIXED |
+| Field injection | MEDIUM | ⚠️ NOT FIXED |
+| No DB indexes | MEDIUM | ⚠️ NOT FIXED |
+
+**Full audit:** See `AUDIT_REPORT.md`
+
+---
 
 Clone repository:
 
