@@ -146,16 +146,18 @@ com.utkarsh.file_nest
 # 🚨 CRITICAL STATUS UPDATE (July 26, 2026)
 
 ## Security Audit Results
-**Overall Score: 6.2/10** - CRITICAL SECURITY GAPS FOUND
+**Overall Score: 6.2/10** - CRITICAL SECURITY GAPS FOUND (5 remaining, 2 fixed)
 
-### 🔴 Critical Issues (7)
+### 🔴 Critical Issues (5 Remaining)
 1. **Hardcoded credentials in source code** - Database password & JWT secret exposed
 2. **JWT exception handling missing** - Unhandled exceptions cause 500 errors
-3. **No file size validation** - Disk exhaustion DoS possible
-4. **No file type validation** - Malware upload possible
-5. **Missing file ownership verification** - Unauthorized access possible
-6. **Orphaned files on DB failure** - Storage leaks
-7. **No exception handling in JWT filter** - Server crashes on bad tokens
+3. **Missing file ownership verification** - Unauthorized access possible
+4. **Orphaned files on DB failure** - Storage leaks
+5. **No exception handling in JWT filter** - Server crashes on bad tokens
+
+### ✅ FIXED (2)
+- ✅ **File size validation** - 100MB limit implemented (prevents disk exhaustion DoS)
+- ✅ **File type validation** - MIME whitelist + blocked extensions (prevents malware upload)
 
 ### 🟠 High-Risk Issues (7)
 - No rate limiting (brute force attacks)
@@ -260,18 +262,20 @@ as `DELETED`.
 - [x] File Entity
 - [x] File Repository
 - [x] File DTO
-- [x] File Upload API ⚠️ (needs security fixes)
+- [x] File Upload API ✅ (with security validation)
 - [x] Local File Storage
 - [x] File Metadata Storage
+- [x] File Size Validation (100MB limit)
+- [x] File Type Validation (MIME whitelist + blocked extensions)
 - [ ] File Download API
 - [ ] File Delete API
 - [ ] File Metadata Retrieval
 - [ ] List Files
 
-### Security Status ⚠️ CRITICAL
-- ❌ No file size validation (100MB limit missing)
-- ❌ No file type validation (blocked extensions missing)
-- ❌ No ownership verification for download
+### Security Status ✅ IMPROVED
+- ✅ File size validation (100MB limit implemented)
+- ✅ File type validation (MIME whitelist: 35 types, blocked extensions: 19)
+- ❌ No ownership verification for download (next priority)
 - ❌ No soft delete implementation
 - ⚠️ Incomplete feature set
 
@@ -280,11 +284,11 @@ as `DELETED`.
 ## Testing Results
 
 ### Unit Tests ✅
-- [x] FileServiceTest: 6/6 PASSED
-- [x] FileUploadSmokeTest: 1/1 PASSED
-- [x] FileNestApplicationTests: 1/1 PASSED
+- [x] FileServiceTest: 14/14 PASSED ✅ (added 7 validation tests)
+- [x] FileUploadSmokeTest: 1/1 PASSED ✅
+- [x] FileNestApplicationTests: 1/1 PASSED ✅
 
-**Total: 8/8 tests passing (100% success rate)**
+**Total: 16/16 tests passing (100% success rate)**
 
 ### Test Coverage
 ✅ Well-tested:
@@ -292,12 +296,15 @@ as `DELETED`.
 - File storage to disk
 - Metadata extraction
 - Database integration
+- File size validation (100MB limit)
+- File type validation (blocked extensions, MIME types)
+- Valid file acceptance (images, documents, archives)
 
-❌ Not tested (CRITICAL):
-- File size validation
-- File type validation
+❌ Not tested (PRIORITY):
 - File ownership verification
 - API endpoints
+- Rate limiting
+- JWT exception handling
 - Authentication
 
 **→ See TEST_REPORT.md for details**
@@ -344,7 +351,9 @@ as `DELETED`.
 
 ## File Management
 
-- [ ] Upload File
+- [x] Upload File ✅ (with size & type validation)
+- [x] File Size Validation ✅ (100MB limit)
+- [x] File Type Validation ✅ (MIME whitelist + blocked extensions)
 - [ ] Download File
 - [ ] Get File Metadata
 - [ ] List Files

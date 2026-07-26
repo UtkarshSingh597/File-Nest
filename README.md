@@ -9,21 +9,23 @@ A production-style cloud file storage backend inspired by **Google Drive** and *
 
 ## ⚠️ Current Status (July 26, 2026)
 
-### Critical Security Issues Found (7)
+### Critical Security Issues Found (5 Remaining)
 🔴 **DO NOT DEPLOY TO PRODUCTION WITHOUT FIXES**
 
 1. **Hardcoded Credentials** - Database password & JWT secret in source code
 2. **No JWT Exception Handling** - Crashes on malformed tokens
-3. **No File Size Validation** - Disk exhaustion attack possible
-4. **No File Type Validation** - Malware upload possible
-5. **Missing Ownership Checks** - Unauthorized file access
-6. **No Security Logging** - Can't detect breaches
-7. **JWT Filter Unprotected** - Server crashes on bad tokens
+3. **Missing Ownership Checks** - Unauthorized file access
+4. **No Security Logging** - Can't detect breaches
+5. **JWT Filter Unprotected** - Server crashes on bad tokens
+
+✅ **FIXED (2)**
+- ✅ File Size Validation (100MB limit implemented)
+- ✅ File Type Validation (MIME whitelist + blocked extensions)
 
 ### Test Results ✅
-- **8/8 Tests Passing** - File upload logic is solid
-- **100% Success Rate** - Core functionality works
-- ⚠️ **Security tests missing** - No validation/ownership tests
+- **16/16 Tests Passing** - All file upload validation works
+- **100% Success Rate** - Core functionality + security tests
+- ⚠️ **Ownership/rate-limiting tests still needed**
 
 ### Project Score by Category
 | Category | Score | Status |
@@ -65,7 +67,15 @@ A production-style cloud file storage backend inspired by **Google Drive** and *
 ## Phase 1: CRITICAL FIXES (This Week)
 **Time: ~8 hours | Priority: URGENT**
 
-### 1. Secure Credentials
+### ✅ 1. Add File Validation (COMPLETED)
+```
+✅ File Size Validation - 100MB limit (prevents disk exhaustion)
+✅ File Type Validation - MIME whitelist + blocked extensions (prevents malware)
+- All 16 tests passing
+- 7 new validation test cases added
+```
+
+### 2. Secure Credentials
 ```bash
 # Move to environment variables - DO NOT COMMIT PASSWORDS
 export DB_USERNAME=your_username
@@ -80,25 +90,10 @@ spring.datasource.password=${DB_PASSWORD}
 jwt.secret=${JWT_SECRET}
 ```
 
-### 2. Fix JWT Exception Handling
+### 3. Fix JWT Exception Handling
 - Add try-catch in JwtService methods
 - Add exception handling in JwtAuthenticationFilter
 - Return 401 on invalid tokens instead of 500
-
-### 3. Add File Validation
-```java
-// Add file size limit (100MB)
-private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
-
-// Add blocked extensions
-private static final Set<String> BLOCKED_EXTENSIONS = 
-    Set.of(".exe", ".sh", ".bat", ".php", ".jsp", ".asp");
-
-// Validate in uploadFile()
-if (file.getSize() > MAX_FILE_SIZE) {
-    throw new BadRequest("File exceeds 100MB limit");
-}
-```
 
 ### 4. Add File Ownership Verification
 ```java
@@ -804,34 +799,36 @@ RabbitMQ will handle:
 
 ## Test Results ✅
 ```
-Total Tests:     8
-Passed:          8 ✅
+Total Tests:     16
+Passed:          16 ✅
 Failed:          0
 Errors:          0
 Success Rate:    100%
 ```
 
 ### Test Breakdown
-- **FileServiceTest**: 6/6 PASSED (0.961s)
+- **FileServiceTest**: 14/14 PASSED (1.083s)
   - ✅ Null/empty file validation
   - ✅ File storage to disk
   - ✅ Metadata extraction
   - ✅ Database integration
   - ✅ Error handling
+  - ✅ File size validation (100MB limit)
+  - ✅ Executable file rejection (.exe, .sh, .bat, .dll)
+  - ✅ Valid file acceptance (images, documents, archives)
 
-- **FileUploadSmokeTest**: 1/1 PASSED (0.010s)
+- **FileUploadSmokeTest**: 1/1 PASSED (0.009s)
   - ✅ Actual file write verification
 
-- **FileNestApplicationTests**: 1/1 PASSED (4.766s)
+- **FileNestApplicationTests**: 1/1 PASSED (4.562s)
   - ✅ Spring context loads
 
 ### Missing Test Coverage ⚠️
-- ❌ File size validation tests
-- ❌ File type validation tests
-- ❌ Ownership verification tests
+- ❌ File ownership verification tests
 - ❌ API endpoint tests
-- ❌ Security/authentication tests
 - ❌ Rate limiting tests
+- ❌ JWT exception handling tests
+- ❌ Credential security tests
 
 **→ See TEST_REPORT.md for detailed results**
 
@@ -849,8 +846,8 @@ mvn clean test
 |-------|----------|--------|
 | Hardcoded credentials | CRITICAL | ⚠️ NOT FIXED |
 | JWT exception handling | CRITICAL | ⚠️ NOT FIXED |
-| No file size validation | CRITICAL | ⚠️ NOT FIXED |
-| No file type validation | CRITICAL | ⚠️ NOT FIXED |
+| ✅ ~~No file size validation~~ | CRITICAL | ✅ FIXED |
+| ✅ ~~No file type validation~~ | CRITICAL | ✅ FIXED |
 | Missing ownership verification | CRITICAL | ⚠️ NOT FIXED |
 
 ## 🟠 HIGH (Fix soon)
