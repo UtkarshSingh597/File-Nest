@@ -4,6 +4,7 @@ import com.utkarsh.file_nest.enums.FolderStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -30,6 +31,8 @@ public class Folder {
     private User owner;
 
     private LocalDate createdAt = LocalDate.now();
+
+    private LocalDateTime deletedAt;
 
     public FolderStatus getStatus() {
         return status;
@@ -98,5 +101,13 @@ private List<Folder> subFolders;
     }
     public void setCreatedAt(LocalDate createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

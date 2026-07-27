@@ -19,8 +19,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
-    @ExceptionHandler(CustomNotFoundException.class)
-         public ResponseEntity<?>notFoundException(CustomNotFoundException ex){
+    @ExceptionHandler(NotFoundException.class)
+         public ResponseEntity<?>notFoundException(NotFoundException ex){
              return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
 @ExceptionHandler(ForbiddenException.class)
@@ -30,6 +30,11 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(BadRequest.class)
     public ResponseEntity<?>handleEmptyFileException(BadRequest ex){
          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+
+        @ExceptionHandler(NoContentException.class)
+    public ResponseEntity<?>handleNoContentException(NoContentException ex){
+         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ex.getMessage());
         }
     }
  

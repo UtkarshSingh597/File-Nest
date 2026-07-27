@@ -1,6 +1,7 @@
 package com.utkarsh.file_nest.File.Service;
 
 import com.utkarsh.file_nest.Exceptions.BadRequest;
+import com.utkarsh.file_nest.Exceptions.NoContentException;
 import com.utkarsh.file_nest.Exceptions.UnAuthorizedException;
 import com.utkarsh.file_nest.File.DTO.FileResponse;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
@@ -23,7 +24,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -410,7 +413,27 @@ class FileServiceTest {
         fileService.deleteFile(10L);
 
         assertThat(file.getStatus()).isEqualTo(FileStatus.DELETED);
+        assertThat(file.getDeletedAt()).isNotNull();
         verify(fileRepository).save(file);
+    }
+
+    @Test
+    void purgeDeletedFilesOlderThanShouldRemoveStoredFileAndRecord() throws IOException {
+        com.utkarsh.file_nest.entity.File file = new com.utkarsh.file_nest.entity.File();
+        file.setStoredName("expired-file.txt");
+
+        Path storedFile = tempDir.resolve("uploads").resolve(file.getStoredName());
+        Files.createDirectories(storedFile.getParent());
+        Files.writeString(storedFile, "expired content");
+
+        when(fileRepository.findByStatusAndDeletedAtBefore(
+                org.mockito.ArgumentMatchers.eq(FileStatus.DELETED), any(LocalDateTime.class)
+        )).thenReturn(List.of(file));
+
+        fileService.purgeDeletedFilesOlderThan(Duration.ofDays(30));
+
+        assertThat(storedFile).doesNotExist();
+        verify(fileRepository).delete(file);
     }
 
     @Test
@@ -424,7 +447,7 @@ class FileServiceTest {
         when(loggedUser.getLoggedUser()).thenReturn(user);
         when(fileRepository.findById(11L)).thenReturn(Optional.of(file));
 
-        BadRequest exception = assertThrows(BadRequest.class, () -> fileService.deleteFile(11L));
+        NoContentException exception = assertThrows(NoContentException.class, () -> fileService.deleteFile(11L));
 
         assertThat(exception).hasMessage("File already deleted");
         verify(fileRepository, never()).save(any());

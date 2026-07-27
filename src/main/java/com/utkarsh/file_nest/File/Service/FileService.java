@@ -2,6 +2,7 @@ package com.utkarsh.file_nest.File.Service;
 
 
 import com.utkarsh.file_nest.Exceptions.BadRequest;
+import com.utkarsh.file_nest.Exceptions.NoContentException;
 import com.utkarsh.file_nest.Exceptions.UnAuthorizedException;
 import com.utkarsh.file_nest.File.DTO.FileResponse;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
@@ -11,6 +12,10 @@ import com.utkarsh.file_nest.entity.User;
 import com.utkarsh.file_nest.enums.FileStatus;
 import com.utkarsh.file_nest.folder.service.FolderService;
 import com.utkarsh.file_nest.repository.FileRepository;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,12 +24,17 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class FileService {
+    private static final Logger log = LoggerFactory.getLogger(FileService.class);
+    private static final Duration DELETED_FILE_RETENTION = Duration.ofDays(30);
     private final FileRepository fileRepository;
     private final FolderService folderService;
     private final LoggedUser loggedUser;
@@ -168,17 +178,39 @@ public class FileService {
 
             );
         }
-
+        @Transactional
         public void deleteFile (Long fileId){
          File file = findOwnedFile(fileId);
             if(file.getStatus().equals(FileStatus.DELETED)) {
-                throw new BadRequest("File already deleted");
+                throw new NoContentException("File already deleted");
             }
 
             file.setStatus(FileStatus.DELETED);
+            file.setDeletedAt(LocalDateTime.now());
             fileRepository.save(file);
 
+        }
 
+        @Scheduled(cron = "0 0 3 * * *")
+        public void purgeExpiredDeletedFiles() {
+            purgeDeletedFilesOlderThan(DELETED_FILE_RETENTION);
+        }
+
+        @Transactional
+        public void purgeDeletedFilesOlderThan(Duration retention) {
+            LocalDateTime cutoff = LocalDateTime.now().minus(retention);
+            List<File> expiredFiles = fileRepository.findByStatusAndDeletedAtBefore(
+                    FileStatus.DELETED, cutoff
+            );
+
+            for (File file : expiredFiles) {
+                try {
+                    Files.deleteIfExists(rootStroage.resolve(file.getStoredName()));
+                    fileRepository.delete(file);
+                } catch (IOException e) {
+                    log.error("Failed to permanently delete stored file {}", file.getStoredName(), e);
+                }
+            }
         }
     }
 

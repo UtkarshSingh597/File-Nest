@@ -1,10 +1,9 @@
 package com.utkarsh.file_nest.folder.service;
 
-import com.utkarsh.file_nest.Exceptions.NotFoundException;
 import com.utkarsh.file_nest.Exceptions.ForbiddenException;
-import com.utkarsh.file_nest.Exceptions.CustomNotFoundException;
+import com.utkarsh.file_nest.Exceptions.NoContentException;
+import com.utkarsh.file_nest.Exceptions.NotFoundException;
 import com.utkarsh.file_nest.auth.service.LoggedUser;
-import com.utkarsh.file_nest.entity.File;
 import com.utkarsh.file_nest.entity.Folder;
 import com.utkarsh.file_nest.entity.User;
 import com.utkarsh.file_nest.enums.FileStatus;
@@ -12,20 +11,25 @@ import com.utkarsh.file_nest.enums.FolderStatus;
 import com.utkarsh.file_nest.folder.dto.CreateFolderRequest;
 import com.utkarsh.file_nest.folder.dto.FolderResponse;
 import com.utkarsh.file_nest.folder.dto.RenameFolderRequest;
-import com.utkarsh.file_nest.repository.FolderRepository;
-import org.springframework.stereotype.Service;
 import com.utkarsh.file_nest.repository.FileRepository;
+import com.utkarsh.file_nest.repository.FolderRepository;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class FolderService {
 
-    private FileRepository fileRepository;
-    private FolderRepository folderRepository;
-    private LoggedUser loggedUser;
+    private static final Duration DELETED_FOLDER_RETENTION = Duration.ofDays(30);
+
+    private final FileRepository fileRepository;
+    private final FolderRepository folderRepository;
+    private final LoggedUser loggedUser;
 
     public FolderService(FolderRepository folderRepository, LoggedUser loggedUser, FileRepository fileRepository){
         this.folderRepository = folderRepository;
@@ -47,9 +51,9 @@ public class FolderService {
     }
 
 public Folder findOwnedFolder(Long folderId){
-        Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new CustomNotFoundException("Folder Not Found"));
+        Folder folder = folderRepository.findById(folderId).orElseThrow(()-> new NotFoundException("Folder Not Found"));
     if(folder.getStatus()==(FolderStatus.DELETED)){
-        throw new CustomNotFoundException("This Folder was Deleted");
+        throw new NoContentException("This Folder was Deleted");
     }
     if(!folder.getOwner().getId().equals(loggedUser.getLoggedUser().getId())){
         throw new NotFoundException("Not Authorized to Access this Folder");
@@ -58,33 +62,6 @@ public Folder findOwnedFolder(Long folderId){
     return folder;
 }
 
-
-    private void deleteFolderRecursively(Folder folder){
-
-
-        List<Folder>childFolders = folderRepository.findByParentFolderAndStatus(
-                folder,
-                FolderStatus.ACTIVE
-        );
-
-        for(Folder childFolder : childFolders){
-            deleteFolderRecursively(childFolder);
-        }
-
-        List<File>files = fileRepository.findByFolderAndStatusNot(
-                folder,
-                FileStatus.DELETED
-        );
-
-        for(File file:files){
-            file.setStatus(FileStatus.DELETED);
-
-        }
-        fileRepository.saveAll(files);
-
-      folder.setStatus(FolderStatus.DELETED);
-        folderRepository.save(folder);
-}
 
     public FolderResponse createFolder(CreateFolderRequest request){
         User user = loggedUser.getLoggedUser();
@@ -147,6 +124,23 @@ folder.setName(request.getFolderName());
 @Transactional
 public void deleteFolder(Long folderId) {
     Folder folder = findOwnedFolder(folderId);
-    deleteFolderRecursively(folder);
+    List<Long> folderIds = folderRepository.findActiveSubtreeIds(folder.getId());
+
+    fileRepository.softDeleteByFolderIdIn(folderIds, FileStatus.DELETED, LocalDateTime.now());
+    folderRepository.softDeleteByIdIn(folderIds, FolderStatus.DELETED, LocalDateTime.now());
 }
+
+    @Scheduled(cron = "0 15 3 * * *")
+    public void purgeExpiredDeletedFolders() {
+        purgeDeletedFoldersOlderThan(DELETED_FOLDER_RETENTION);
+    }
+
+    @Transactional
+    public void purgeDeletedFoldersOlderThan(Duration retention) {
+        LocalDateTime cutoff = LocalDateTime.now().minus(retention);
+
+        while (folderRepository.deleteExpiredLeafFolders(FolderStatus.DELETED, cutoff) > 0) {
+
+        }
+    }
 }
