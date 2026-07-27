@@ -44,6 +44,7 @@ public class File {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime deletedAt;
 
     public File(Folder folder, String mimeType, String originalName, User owner, Long size, FileStatus status, String storedName) {
 
@@ -134,5 +135,13 @@ public class File {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

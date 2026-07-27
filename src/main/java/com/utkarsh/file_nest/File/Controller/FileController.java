@@ -2,18 +2,18 @@ package com.utkarsh.file_nest.File.Controller;
 
 import com.utkarsh.file_nest.File.DTO.FileResponse;
 import com.utkarsh.file_nest.File.Service.FileService;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/api/files")
 @RestController
+@Validated
 public class FileController {
 
-    private FileService fileService;
+    private final FileService fileService;
 
     public FileController(FileService fileService){
         this.fileService = fileService;
@@ -25,6 +25,12 @@ public class FileController {
         FileResponse response = fileService.uploadFile(file,folderId);
         return ResponseEntity.ok(response);
 
+    }
+
+    @DeleteMapping("/{fileId}")
+    public ResponseEntity<Void> deleteFile(@PathVariable @Positive Long fileId) {
+        fileService.deleteFile(fileId);
+        return ResponseEntity.noContent().build();
     }
 
 }
