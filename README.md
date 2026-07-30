@@ -241,10 +241,7 @@ Users cannot access:
 
 ### Current Security Issues
 - ❌ No file ownership check on download (endpoint missing)
-- ❌ No file size validation (DoS risk)
-- ❌ No file type validation (malware risk)
 - ❌ No rate limiting (brute force risk)
-- ❌ Credentials hardcoded in code (breach risk)
 - ❌ No exception handling in JWT (crash risk)
 
 ---
@@ -739,8 +736,6 @@ mvn clean test
 |-------|----------|--------|
 | Hardcoded credentials | CRITICAL | ⚠️ NOT FIXED |
 | JWT exception handling | CRITICAL | ⚠️ NOT FIXED |
-| ✅ ~~No file size validation~~ | CRITICAL | ✅ FIXED |
-| ✅ ~~No file type validation~~ | CRITICAL | ✅ FIXED |
 | Missing ownership verification | CRITICAL | ⚠️ NOT FIXED |
 
 ## 🟠 HIGH (Fix soon)
@@ -749,17 +744,11 @@ mvn clean test
 | No rate limiting | HIGH | ⚠️ NOT FIXED |
 | No security logging | HIGH | ⚠️ NOT FIXED |
 | No CORS configuration | HIGH | ⚠️ NOT FIXED |
-| Wrong exception types | HIGH | ⚠️ NOT FIXED |
 
 ## 🟡 MEDIUM (Fix when possible)
 | Issue | Severity | Status |
 |-------|----------|--------|
-| Code typos | MEDIUM | ⚠️ NOT FIXED |
-| Package naming | MEDIUM | ⚠️ NOT FIXED |
-| Field injection | MEDIUM | ⚠️ NOT FIXED |
 | No DB indexes | MEDIUM | ⚠️ NOT FIXED |
-
-**Full audit:** See `AUDIT_REPORT.md`
 
 ---
 
