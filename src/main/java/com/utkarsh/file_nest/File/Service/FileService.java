@@ -39,67 +39,28 @@ public class FileService {
     private final FolderService folderService;
     private final LoggedUser loggedUser;
 
-
-    private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
-
-
-    private static final Set<String> ALLOWED_MIME_TYPES = new HashSet<>(Set.of(
-
-            "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
-
-            "application/pdf", "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "application/vnd.ms-excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "application/vnd.ms-powerpoint",
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            "text/plain", "text/csv", "text/html",
-
-            "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
-            "application/gzip", "application/x-tar",
-
-            "audio/mpeg", "audio/wav", "audio/ogg", "video/mp4", "video/mpeg", "video/quicktime"
-    ));
-
-
-    private static final Set<String> BLOCKED_EXTENSIONS = new HashSet<>(Set.of(
-            ".exe", ".bat", ".cmd", ".com", ".pif", ".scr",
-            ".sh", ".bash", ".zsh", ".ksh",
-            ".dll", ".sys", ".drv", ".vxd",
-            ".dmg", ".pkg", ".deb", ".rpm",
-            ".msi", ".msu", ".jar", ".class",
-            ".app", ".apk", ".ipa"
-    ));
-
-    private String extractExtention(String fileName) {
-        if (fileName == null || !fileName.contains("."))
-            return "";
-        return fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
-    }
+    public File findOwnedFile(Long fileId) {
+        User user = loggedUser.getLoggedUser();
 
         File file = fileRepository.findById(fileId).orElseThrow(() -> new BadRequest("File Not Found"));
 
-
         if (!file.getOwner().getId().equals(user.getId())) {
             throw new UnAuthorizedException("You are not allowed to access this file");
-=======
-
-        if (BLOCKED_EXTENSIONS.contains(extension)) {
-            throw new BadRequest("File type not allowed: " + extension);
-
         }
         return file;
 
+    }
 
-=======
-        if (mimeType == null || mimeType.isBlank()) {
-            mimeType = "application/octet-stream";
-        }
+    private FileResponse toResponse(File file){
+        return new FileResponse(
+                file.getId(),
+                file.getOriginalName(),
+                file.getSize(),
+                file.getFolder() != null ? file.getFolder().getId() : null,
+                file.getMimeType(),
+                file.getCreatedAt()
 
-        if (!ALLOWED_MIME_TYPES.contains(mimeType) && !mimeType.equals("application/octet-stream")) {
-            throw new BadRequest("File type not allowed: " + mimeType);
-        }
-
+        );
     }
         private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
 
@@ -108,7 +69,6 @@ public class FileService {
 
                 "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
 
-
                 "application/pdf", "application/msword",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "application/vnd.ms-excel",
@@ -116,11 +76,6 @@ public class FileService {
                 "application/vnd.ms-powerpoint",
                 "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                 "text/plain", "text/csv", "text/html",
-=======
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequest("File size exceeds maximum limit of 100MB");
-        }
-
 
                 "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
                 "application/gzip", "application/x-tar",
@@ -147,8 +102,6 @@ public class FileService {
         private void validateFileType (MultipartFile file, String fileName){
             String mimeType = file.getContentType();
             String extension = extractExtention(fileName);
-
-        validateFileType(file, originalName);
 
 
             if (BLOCKED_EXTENSIONS.contains(extension)) {
@@ -271,6 +224,13 @@ public class FileService {
                 }
             }
         }
-    }
+        public List<FileResponse> getFiles(Long folderId) {
 
-}
+                Folder folder = folderService.findOwnedFolder(folderId);
+                List<File> files = fileRepository.findByFolderAndStatusNot(folder , FileStatus.DELETED);
+                return
+                        files.stream().map(this::toResponse).toList();
+            }
+        }
+
+
