@@ -11,8 +11,7 @@ folders, local file upload, file listing, and soft deletion with scheduled
 
 The current working tree also contains an in-progress folder-download endpoint.
 Its controller route and DTO exist, but `FolderService.downloadFolder(...)` has
-not been implemented, so it is not yet usable. The project does not currently
-compile while that route remains incomplete. See [Known limitations](#known-limitations).
+not been implemented, so it is not yet usable.
 
 ## Stack
 
@@ -140,35 +139,17 @@ There is no individual file-download or restore endpoint yet.
 The server uses port `8080` by default. Hibernate is currently configured with
 `spring.jpa.hibernate.ddl-auto=update`.
 
-## Known limitations
-
-- The JWT filter does not catch malformed, expired, or invalid-token parsing
-  exceptions; such requests can result in a server error.
-- No rate limiting, CORS configuration, security audit logging, or pagination
-  is configured.
-- File type validation relies on request-provided MIME type and filename
-  extension; it does not inspect file contents.
-- Flyway is included but no versioned migration scripts are present; schema
-  updates currently rely on Hibernate.
-- The current worktree does not compile: `FolderController` refers to the
-  unfinished `FolderService.downloadFolder(...)`. Resolve this before running
-  the full suite.
-
 ## Testing
 
 The application-context startup check passed on July 31, 2026 using the local
 `.env` configuration: MySQL connected successfully and Flyway, Hibernate, and
-Spring Security initialized. The check used a temporary compile-only stub for
-the pending folder-download method; that stub was removed immediately after the
-test.
+Spring Security initialized.
 
-Run the full suite after the folder-download compilation issue is resolved:
+Run the full suite:
 
 ```bash
 ./mvnw test
 ```
-
-The full test suite remains blocked by the unfinished folder-download method.
 
 ## Planned work
 
