@@ -3,6 +3,8 @@ package com.utkarsh.file_nest.File.Controller;
 import com.utkarsh.file_nest.File.DTO.FileResponse;
 import com.utkarsh.file_nest.File.Service.FileService;
 import jakarta.validation.constraints.Positive;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +41,7 @@ public class FileController {
         List<FileResponse> response = fileService.getFiles(folderId);
         return ResponseEntity.ok(response);
     }
+
 
 
 }
