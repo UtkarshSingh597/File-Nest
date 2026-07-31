@@ -1,815 +1,178 @@
 # FileNest
 
-A production-style cloud file storage backend inspired by **Google Drive** and **Dropbox**.
+FileNest is a Spring Boot backend for authenticated folder and file management.
+It stores file metadata in MySQL and uploaded bytes on the local filesystem.
 
+## Status
 
-# Contents
+Implemented features include JWT-based registration and login, hierarchical
+folders, local file upload, file listing, and soft deletion with scheduled
+30-day cleanup.
 
-- [Current Status & Audit Results](#-current-status-july-26-2026)
-- [Immediate Actions Required](#-immediate-actions-required)
-- [Architecture](#architecture)
-- [Repository layout](#repository-layout)
-- [Authentication System](#authentication-system)
-- [Folder Management](#folder-management)
-- [File Upload System](#file-upload-system)
-- [Database Design](#database-design)
-- [Security Model](#security-model)
-- [Current Implementation](#current-implementation)
-- [Testing](#testing)
-- [Known Issues](#known-issues)
-- [Future Architecture](#future-architecture)
-- [Setup](#setup)
-- [API Endpoints](#api-endpoints)
-- [Future Work](#future-work)
+The current working tree also contains an in-progress folder-download endpoint.
+Its controller route and DTO exist, but `FolderService.downloadFolder(...)` has
+not been implemented, so it is not yet usable. The project does not currently
+compile while that route remains incomplete. See [Known limitations](#known-limitations).
 
----
+## Stack
 
-# Architecture
+- Java 21 and Spring Boot 3.5.4
+- Spring MVC, Spring Security, Validation, and Spring Data JPA
+- MySQL and Hibernate
+- Flyway dependencies (no migrations are currently present)
+- JJWT for bearer-token authentication
+- Local `uploads/` directory for file content
 
-```
-                    Client
-                      |
-                      |
-                      v
+## Architecture
 
-              REST API Request
-
-                      |
-                      v
-
-              ┌───────────────┐
-              │  Controller   │
-              └───────┬───────┘
-                      |
-                      v
-
-              ┌───────────────┐
-              │    Service    │
-              └───────┬───────┘
-                      |
-          ┌───────────┴───────────┐
-          v                       v
-
-   ┌─────────────┐        ┌─────────────┐
-   │ Repository  │        │ File Storage│
-   └──────┬──────┘        └──────┬──────┘
-          |                      |
-          v                      v
-
-       MySQL                 Local Storage
+```text
+HTTP request
+  -> Controller
+  -> Service (authentication, ownership, business rules)
+  -> Repository -> MySQL
+  -> Local uploads directory (file bytes only)
 ```
 
----
+The code is organized under `auth`, `security`, `folder`, `File`, `entity`,
+`repository`, and `Exceptions` packages.
 
-# Technology Stack
+## Security model
 
-## Backend
+`POST /api/auth/**` endpoints are public. Every other route requires:
 
-- Java 21
-- Spring Boot 3.5
-- Spring MVC
-- Spring Security
-- Spring Data JPA
-- Hibernate
-
-## Database
-
-- MySQL
-- Flyway
-
-## Authentication
-
-- JWT Authentication
-- BCrypt Password Hashing
-
-## Current Storage
-
-- Local File Storage
-
-## Planned Infrastructure
-
-- MinIO / AWS S3
-- Redis
-- RabbitMQ
-- Docker
-- CI/CD Pipeline
-
----
-
-# Repository Layout
-
-```
-file-nest/
-
-├── src/main/java/com/utkarsh/file_nest
-
-│
-├── auth/
-│   ├── controller/
-│   ├── dto/
-│   └── service/
-│
-├── security/
-│
-├── entity/
-│
-├── repository/
-│
-├── Exceptions/
-│
-├── folder/
-│   ├── controller/
-│   ├── dto/
-│   └── service/
-│
-├── File/
-│   ├── controller/
-│   ├── DTO/
-│   └── Service/
-│
-└── resources/
-    └── application.properties
+```http
+Authorization: Bearer <token>
 ```
 
----
+Registration hashes passwords with BCrypt. The JWT subject is the user's email.
+Folder and file service methods check that the requested resource is owned by
+the authenticated user before acting on it.
 
-# Authentication System
+Configure database and JWT values using environment variables—never commit
+real credentials or a signing key:
 
-FileNest uses JWT-based authentication.
-
-## Registration Flow
-
-```
-Register Request
-
-        |
-        v
-
-Validate DTO
-
-        |
-        v
-
-Check Existing Email
-
-        |
-        v
-
-Hash Password using BCrypt
-
-        |
-        v
-
-Save User
-
-        |
-        v
-
-Generate JWT Token
-
-        |
-        v
-
-Return AuthResponse
+```powershell
+$env:DB_URL = "jdbc:mysql://localhost:3306/file_nest"
+$env:DB_USERNAME = "your-database-user"
+$env:DB_PASSWORD = "your-database-password"
+$env:JWT_SECRET = "a-long-random-secret-at-least-32-bytes"
+# Optional; defaults to 86400000 milliseconds
+$env:JWT_EXPIRATION = "86400000"
 ```
 
----
-
-## Login Flow
-
-```
-Login Request
-
-        |
-        v
-
-Find User
-
-        |
-        v
-
-Verify Password
-
-        |
-        v
-
-Generate JWT
-
-        |
-        v
-
-Return Token
-```
-
----
-
-# Security Model
-
-⚠️ **CURRENT IMPLEMENTATION HAS CRITICAL GAPS** - See [Known Issues](#known-issues)
-
-Every protected resource SHOULD follow:
-
-```
-Request
-
-  |
-  v
-
-Authenticate User
-
-  |
-  v
-
-Find Resource
-
-  |
-  v
-
-Check Ownership
-
-  |
-  v
-
-Allow / Reject
-```
-
-Users cannot access:
-
-- Other users' folders ✅ (implemented)
-- Other users' files ⚠️ (not fully implemented - no download endpoint)
-- Deleted resources ✅ (implemented)
-
-### Current Security Issues
-- ❌ No file ownership check on download (endpoint missing)
-- ❌ No rate limiting (brute force risk)
-- ❌ No exception handling in JWT (crash risk)
-
----
-
-# Folder Management
-
-FileNest supports hierarchical folders.
-
-Example:
-
-```
-Documents
-
-    |
-    ├── Projects
-
-    |       |
-    |       └── FileNest
-
-    |
-    └── Photos
-```
-
-Implemented using:
-
-```java
-@ManyToOne
-private Folder parentFolder;
-```
-
----
-
-## Folder Features
-
-Implemented:
-
-✅ Create Folder
-
-✅ Nested Folder Creation
-
-✅ Rename Folder
-
-✅ Folder Ownership Validation
-
-✅ Recursive Folder Delete
-
-
----
-
-# Soft Delete System
-
-Folders are not permanently removed.
-
-Instead:
-
-```
-ACTIVE
-
-DELETED
-```
-
-Deleting a folder:
-
-```
-Parent Folder
-
-      |
-      |
-      +---- Child Folder
-
-      |
-      |
-      +---- Files
-```
-
-recursively marks everything as deleted.
-
----
-
-# File Management
-
-## File Upload Flow
-
-```
-MultipartFile Request
-
-        |
-        v
-
-Validate File
-
-        |
-        v
-
-Get Logged User
-
-        |
-        v
-
-Verify Folder Access
-
-        |
-        v
-
-Generate UUID Filename
-
-        |
-        v
-
-Store File
-
-        |
-        v
-
-Save Metadata
-
-        |
-        v
-
-Return FileResponse
-```
-
----
-
-# File Storage Design
-
-Files are separated into two parts:
-
-## Metadata
-
-Stored in MySQL:
-
-```
-File
-
-id
-
-originalName
-
-storedName
-
-size
-
-mimeType
-
-owner
-
-folder
-
-status
-
-createdAt
-```
-
----
-
-## Actual File
-
-Stored separately:
-
-```
-uploads/
-
-    |
-    |
-    └── uuid-generated-file.pdf
-```
-
----
-
-# Why UUID Filenames?
-
-Original filename:
-
-```
-resume.pdf
-```
-
-can create conflicts:
-
-```
-User A
-resume.pdf
-
-
-User B
-resume.pdf
-```
-
-Instead:
-
-```
-8f4a2c91-resume.pdf
-
-c12b7d22-resume.pdf
-```
-
-Every stored file gets a unique identifier.
-
----
-
-# Database Design
-
-## User
-
-```
-User
-
-id
-
-username
-
-email
-
-password
-
-createdAt
-```
-
----
-
-## Folder
-
-```
-Folder
-
-id
-
-name
-
-owner
-
-parentFolder
-
-status
-
-createdAt
-```
-
----
-
-## File
-
-```
-File
-
-id
-
-originalName
-
-storedName
-
-size
-
-mimeType
-
-owner
-
-folder
-
-status
-
-createdAt
-```
-
----
-
-# Current Implementation
-
-## Completed
+The committed [application.properties](src/main/resources/application.properties)
+imports a local [`.env`](.env) file as properties when it exists. Environment
+variables remain supported and take precedence. [`.env.example`](.env.example)
+is a safe placeholder reference.
+
+## API
 
 ### Authentication
 
-✅ User Registration
+| Method | Route | Body | Result |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/register` | `name`, `email`, `password` | JWT token |
+| `POST` | `/api/auth/login` | `email`, `password` | JWT token |
 
-✅ User Login
+Registration passwords must contain at least eight characters, including upper-
+and lowercase letters, a number, and a special character.
 
-✅ JWT Generation
-
-✅ JWT Validation
-
-✅ Spring Security Configuration
-
-✅ BCrypt Password Encoding
-
-
-### Folder System
-
-✅ Folder Creation
-
-✅ Nested Folder Support
-
-✅ Ownership Validation
-
-✅ Soft Delete
-
-✅ Recursive Folder Deletion
-
-
-### File System
-
-✅ File Entity
-
-✅ File Repository
-
-✅ File DTO
-
-✅ File Upload API
-
-✅ Local File Storage
-
-✅ File Metadata Storage
-
-
----
-
-# API Endpoints
-
-## Authentication
-
-### Register
-
-```
+```json
 POST /api/auth/register
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "AsecurePassword1!"
+}
 ```
 
-### Login
+Successful authentication returns:
 
-```
-POST /api/auth/login
-```
-
----
-
-## Folder
-
-### Create Folder
-
-```
-POST /api/folders
+```json
+{ "token": "<jwt>" }
 ```
 
-### Rename Folder
+### Folders
 
-```
-PUT /api/folders/{id}
-```
+| Method | Route | Body / parameters | Result |
+| --- | --- | --- | --- |
+| `POST` | `/api/folders` | `folderName`, optional `parentFolderId` | Creates a folder (`201`) |
+| `GET` | `/api/folders` | — | Lists active folders owned by the caller |
+| `GET` | `/api/folders/{folderId}` | — | Gets an owned active folder |
+| `PATCH` | `/api/folders/{folderId}` | `folderName` | Renames an owned active folder |
+| `DELETE` | `/api/folders/{folderId}` | — | Soft-deletes the active folder subtree (`204`) |
 
-### Delete Folder
+Deleting a folder also soft-deletes its files and nested folders. Deleted folder
+records are purged after 30 days once they are empty leaf nodes.
 
-```
-DELETE /api/folders/{id}
-```
+`GET /api/folders/{folderId}/download` is declared in the controller but is
+**not implemented** and should not be called yet.
 
----
+### Files
 
-## Files
+| Method | Route | Body / parameters | Result |
+| --- | --- | --- | --- |
+| `POST` | `/api/files/upload` | multipart `file`, optional `folderId` | Stores the file and its metadata |
+| `GET` | `/api/files?folderId={folderId}` | `folderId` is required | Lists non-deleted files in an owned folder |
+| `DELETE` | `/api/files/{fileId}` | — | Soft-deletes an owned file (`204`) |
 
-### Upload File
+Uploads are saved under `uploads/` with a UUID filename. Metadata stores the
+original name, MIME type, size, owner, optional folder, status, and creation
+time. Files over 100 MiB and a set of executable/installer extensions are
+rejected. Files soft-deleted for more than 30 days are physically removed and
+their records are deleted by the scheduled cleanup task.
 
-```
-POST /api/files/upload
-```
+There is no individual file-download or restore endpoint yet.
 
-Request:
+## Setup
 
-```
-MultipartFile file
+1. Install Java 21 and run MySQL.
+2. Create the `file_nest` database and a least-privileged application user.
+3. Set the required environment variables shown above.
+4. Start the application:
 
-folderId(optional)
-```
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
----
+   On Windows, use `mvnw.cmd spring-boot:run`.
 
-# Future Architecture
+The server uses port `8080` by default. Hibernate is currently configured with
+`spring.jpa.hibernate.ddl-auto=update`.
 
-The current system is a modular monolith.
+## Known limitations
 
-Future evolution:
+- The JWT filter does not catch malformed, expired, or invalid-token parsing
+  exceptions; such requests can result in a server error.
+- No rate limiting, CORS configuration, security audit logging, or pagination
+  is configured.
+- File type validation relies on request-provided MIME type and filename
+  extension; it does not inspect file contents.
+- Flyway is included but no versioned migration scripts are present; schema
+  updates currently rely on Hibernate.
+- The current worktree does not compile: `FolderController` refers to the
+  unfinished `FolderService.downloadFolder(...)`. Resolve this before running
+  the full suite.
 
-```
-                 API Gateway
+## Testing
 
-                      |
+The application-context startup check passed on July 31, 2026 using the local
+`.env` configuration: MySQL connected successfully and Flyway, Hibernate, and
+Spring Security initialized. The check used a temporary compile-only stub for
+the pending folder-download method; that stub was removed immediately after the
+test.
 
-        ----------------------------
-
-        |             |            |
-
-    User Service  File Service  Notification Service
-
-
-                      |
-
-                 Message Queue
-
-                 (RabbitMQ)
-```
-
----
-
-# Planned Features
-
-## File Features
-
-- Download files
-- Delete files
-- Restore deleted files
-- File versioning
-
-
-## Cloud Storage
-
-- MinIO integration
-- AWS S3 support
-
-
-## Performance
-
-- Redis caching
-- Database indexing
-- Pagination
-
-
-## Distributed Processing
-
-RabbitMQ will handle:
-
-- Virus scanning
-- Thumbnail generation
-- Background processing
-
-
-## DevOps
-
-- Docker
-- Docker Compose
-- GitHub Actions
-- Deployment pipeline
-
-
----
-
-# Testing
-
-## Test Results ✅
-```
-Total Tests:     16
-Passed:          16 ✅
-Failed:          0
-Errors:          0
-Success Rate:    100%
-```
-
-### Test Breakdown
-- **FileServiceTest**: 14/14 PASSED (1.083s)
-  - ✅ Null/empty file validation
-  - ✅ File storage to disk
-  - ✅ Metadata extraction
-  - ✅ Database integration
-  - ✅ Error handling
-  - ✅ File size validation (100MB limit)
-  - ✅ Executable file rejection (.exe, .sh, .bat, .dll)
-  - ✅ Valid file acceptance (images, documents, archives)
-
-- **FileUploadSmokeTest**: 1/1 PASSED (0.009s)
-  - ✅ Actual file write verification
-
-- **FileNestApplicationTests**: 1/1 PASSED (4.562s)
-  - ✅ Spring context loads
-
-### Missing Test Coverage ⚠️
-- ❌ File ownership verification tests
-- ❌ API endpoint tests
-- ❌ Rate limiting tests
-- ❌ JWT exception handling tests
-- ❌ Credential security tests
-
-**→ See TEST_REPORT.md for detailed results**
-
-### Run Tests
-```bash
-mvn clean test
-```
-
----
-
-# Known Issues
-
-## 🔴 CRITICAL (Fix before production)
-| Issue | Severity | Status |
-|-------|----------|--------|
-| Hardcoded credentials | CRITICAL | ⚠️ NOT FIXED |
-| JWT exception handling | CRITICAL | ⚠️ NOT FIXED |
-| Missing ownership verification | CRITICAL | ⚠️ NOT FIXED |
-
-## 🟠 HIGH (Fix soon)
-| Issue | Severity | Status |
-|-------|----------|--------|
-| No rate limiting | HIGH | ⚠️ NOT FIXED |
-| No security logging | HIGH | ⚠️ NOT FIXED |
-| No CORS configuration | HIGH | ⚠️ NOT FIXED |
-
-## 🟡 MEDIUM (Fix when possible)
-| Issue | Severity | Status |
-|-------|----------|--------|
-| No DB indexes | MEDIUM | ⚠️ NOT FIXED |
-
----
-
-Clone repository:
+Run the full suite after the folder-download compilation issue is resolved:
 
 ```bash
-git clone <repository-url>
+./mvnw test
 ```
 
-Configure MySQL:
+The full test suite remains blocked by the unfinished folder-download method.
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/file_nest
-spring.datasource.username=<username>
-spring.datasource.password=<password>
-```
+## Planned work
 
-Run application:
-
-```bash
-mvn spring-boot:run
-```
-
-Application starts on:
-
-```
-localhost:8080
-```
-
----
-
-# Development Philosophy
-
-FileNest follows:
-
-- Clean Architecture
-- Separation of Responsibilities
-- DTO-based communication
-- Secure resource access
-- Maintainable code structure
-
-The project is being developed incrementally:
-
-```
-Working Feature
-
-        ↓
-
-Improve Architecture
-
-        ↓
-
-Add Scalability
-
-        ↓
-
-Introduce Distributed Systems
-```
-
----
-
-# Future Goal
-
-Transform FileNest from a simple cloud storage backend into a production-style distributed storage platform while gaining practical experience with backend engineering and system design.
+- Complete folder archive download and add secure individual file download.
+- Add restore support, pagination, database indexes, and API tests.
+- Add token-error handling, rate limiting, CORS policy, and audit logging.
+- Move file bytes to object storage and add Docker/CI deployment support.
